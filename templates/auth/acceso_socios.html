@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Acceso a Socios - AV Montealto{% endblock %}
+
+{% block scripts %}
+<script>
+// Desactivar el JavaScript problemático para el login
+document.addEventListener('DOMContentLoaded', function() {
+    const submitButtons = document.querySelectorAll('button[type="submit"]');
+    submitButtons.forEach(function(button) {
+        // Remover cualquier listener existente
+        button.replaceWith(button.cloneNode(true));
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white text-center py-4">
+                <h3 class="mb-0">
+                    <i class="bi bi-person-circle me-2"></i>
+                    Acceso a Socios
+                </h3>
+            </div>
+            <div class="card-body p-5">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="nombre_usuario" class="form-label fw-bold">
+                            <i class="bi bi-person me-1"></i>Nombre de Usuario
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input type="text" class="form-control" id="nombre_usuario" name="nombre_usuario" required 
+                                   placeholder="Ej: juan0001">
+                        </div>
+                        <small class="text-muted">Formato: nombreinicialesapellidoaño </small>
+                        <br>
+                        <small class="text-muted">Ejemplo: Juan Rodriguez Jimenez 1990 = juanrj1990</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-bold">
+                            <i class="bi bi-lock me-1"></i>Contraseña
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password" name="password" required 
+                                   placeholder="Introduce tu contraseña">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Iniciar Sesión
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center text-muted bg-light">
+                <small>
+                    <i class="bi bi-shield-check me-1"></i>
+                    Sistema seguro de gestión de la Asociación de Vecinos de Montealto
+                </small>
+            </div>
+        </div>
+        
+        <!-- Botón para volver -->
+        <div class="text-center mt-4">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Volver a la portada
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

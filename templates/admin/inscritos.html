@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Inscritos en {{ actividad.nombre }} - Asociación de Vecinos de Montealto{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-people me-2"></i>
+        Inscritos en {{ actividad.nombre }}
+    </h1>
+    <div class="btn-group">
+        <a href="{{ url_for('admin.inscritos_pdf', actividad_id=actividad.id) }}" class="btn btn-outline-danger" target="_blank">
+            <i class="bi bi-file-pdf me-2"></i>
+            Imprimir PDF
+        </a>
+        <a href="{{ url_for('admin.gestion_actividades') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>
+            Volver
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-check me-2"></i>
+                    Lista de Inscritos ({{ inscripciones|length }}/{{ actividad.aforo_maximo }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if inscripciones %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Fecha de Inscripción</th>
+                                    <th class="text-center">Asistencia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inscripcion in inscripciones %}
+                                    <tr>
+                                        <td>
+                                            {% if inscripcion.beneficiario %}
+                                                <strong>{{ inscripcion.beneficiario.nombre }} {{ inscripcion.beneficiario.primer_apellido }}{% if inscripcion.beneficiario.segundo_apellido %} {{ inscripcion.beneficiario.segundo_apellido }}{% endif %}</strong>
+                                                <br><small class="text-success">Beneficiario de {{ inscripcion.usuario.nombre }}</small>
+                                                {% if inscripcion.beneficiario.numero_beneficiario %}
+                                                    <br><small class="text-muted">Nº: <strong>{{ inscripcion.beneficiario.numero_beneficiario }}</strong></small>
+                                                {% endif %}
+                                            {% else %}
+                                                <strong>{{ inscripcion.usuario.nombre }}</strong>
+                                                {% if inscripcion.usuario.numero_socio %}
+                                                    <br><small class="text-muted">Nº Socio: <strong>{{ inscripcion.usuario.numero_socio }}</strong></small>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if inscripcion.beneficiario %}
+                                                <small class="text-muted">Beneficiario</small>
+                                            {% else %}
+                                                {{ inscripcion.usuario.email }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ inscripcion.fecha_inscripcion.strftime('%d/%m/%Y %H:%M') }}</td>
+                                        <td class="text-center">
+                                            <form method="POST" action="{{ url_for('admin.marcar_asistencia', actividad_id=actividad.id, inscripcion_id=inscripcion.id) }}" style="display: inline;" class="asistencia-form">
+                                                <label class="checkbox-custom" style="cursor: pointer;">
+                                                    <input type="checkbox" 
+                                                           {% if inscripcion.asiste %}checked{% endif %}
+                                                           onchange="this.closest('form').submit();"
+                                                           style="display: none;">
+                                                    <span class="checkbox-icon">
+                                                        {% if inscripcion.asiste %}
+                                                            <i class="bi bi-check-circle-fill text-success" style="font-size: 1.5rem;"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-circle" style="font-size: 1.5rem; color: #6c757d;"></i>
+                                                        {% endif %}
+                                                    </span>
+                                                </label>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-people text-muted fs-1"></i>
+                        <h4 class="mt-3">No hay inscripciones</h4>
+                        <p>Aún no se ha inscrito nadie en esta actividad.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Información de la Actividad
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ actividad.nombre }}</h6>
+                {% if actividad.descripcion %}
+                    <p class="text-muted">{{ actividad.descripcion }}</p>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="mb-2">
+                    <strong>Fecha:</strong><br>
+                    {{ actividad.fecha.strftime('%d/%m/%Y') }} a las {{ actividad.fecha.strftime('%H:%M') }}
+                </div>
+                
+                <div class="mb-2">
+                    <strong>Aforo:</strong><br>
+                    <span class="badge bg-info">
+                        {{ inscripciones|length }}/{{ actividad.aforo_maximo }}
+                    </span>
+                </div>
+                
+                <div class="mb-2">
+                    <strong>Plazas disponibles:</strong><br>
+                    {% if actividad.tiene_plazas_disponibles() %}
+                        <span class="badge bg-success">{{ actividad.plazas_disponibles() }}</span>
+                    {% else %}
+                        <span class="badge bg-danger">Completo</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-2">
+                    <strong>Asistencia:</strong><br>
+                    {% set asistentes = inscripciones|selectattr('asiste')|list|length %}
+                    <span class="badge bg-success">{{ asistentes }}</span> asistieron<br>
+                    <span class="badge bg-secondary">{{ inscripciones|length - asistentes }}</span> no asistieron
+                </div>
+                
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('actividades.detalle_actividad', actividad_id=actividad.id) }}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye me-1"></i>
+                        Ver Detalles
+                    </a>
+                    <a href="{{ url_for('admin.editar_actividad', actividad_id=actividad.id) }}" 
+                       class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-pencil me-1"></i>
+                        Editar Actividad
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .checkbox-custom {
+        display: inline-block;
+        position: relative;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .checkbox-icon {
+        display: inline-block;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+    
+    .checkbox-custom:hover .checkbox-icon {
+        transform: scale(1.1);
+    }
+    
+    .checkbox-custom input[type="checkbox"]:checked + .checkbox-icon {
+        animation: checkPulse 0.3s ease;
+    }
+    
+    @keyframes checkPulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    
+    .asistencia-form {
+        margin: 0;
+    }
+</style>
+<script>
+    // Mejorar la experiencia del checkbox
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('.asistencia-form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // No mostrar confirmación, solo enviar
+                // El cambio visual se verá al recargar
+            });
+        });
+    });
+</script>
+{% endblock %}

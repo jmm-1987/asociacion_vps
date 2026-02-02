@@ -1,0 +1,646 @@
+{% extends "base.html" %}
+
+{% block title %}Hazte Socio - Asociación de Vecinos de Montealto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header text-center py-4" style="background: linear-gradient(135deg, #ff9999 0%, #ffb366 16.66%, #ffeb99 33.33%, #99ff99 50%, #9999ff 66.66%, #b399e6 83.33%, #d4b3f0 100%);">
+                <h2 class="mb-0 text-white fw-bold">
+                    <i class="bi bi-person-plus-fill me-2"></i>
+                    Solicitud de Inscripción
+                </h2>
+                <p class="text-white-50 mb-0 mt-2">Únete a nuestra asociación de vecinos de Montealto</p>
+            </div>
+            <div class="card-body p-5">
+                <form method="POST" id="formSolicitud">
+                    <!-- Sección: Datos del nuevo socio -->
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-badge me-2"></i>
+                                Datos del nuevo socio
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="nombre" class="form-label fw-bold">
+                                        <i class="bi bi-person me-1"></i>Nombre <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" 
+                                           required pattern="[A-Za-zÑñ ]+" 
+                                           title="Solo letras y espacios (se permiten nombres compuestos como María José)">
+                                    <small class="text-muted"></small>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="primer_apellido" class="form-label fw-bold">
+                                        <i class="bi bi-person me-1"></i>Primer Apellido <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="primer_apellido" name="primer_apellido" 
+                                           required pattern="[A-Za-zÑñ ]+" 
+                                           title="Solo letras y espacios (se permiten apellidos compuestos)">
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="segundo_apellido" class="form-label fw-bold">
+                                        <i class="bi bi-person me-1"></i>Segundo Apellido <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="segundo_apellido" name="segundo_apellido" 
+                                           required pattern="[A-Za-zÑñ ]+" 
+                                           title="Solo letras y espacios (se permiten apellidos compuestos)">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="movil" class="form-label fw-bold">
+                                        <i class="bi bi-phone me-1"></i>Móvil <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="tel" class="form-control" id="movil" name="movil" 
+                                           required pattern="[0-9]{9}" maxlength="9" 
+                                           title="9 dígitos numéricos" placeholder="123456789">
+                                    <small class="text-muted">9 dígitos sin espacios ni guiones</small>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="movil2" class="form-label fw-bold">
+                                        <i class="bi bi-phone me-1"></i>Móvil 2
+                                    </label>
+                                    <input type="tel" class="form-control" id="movil2" name="movil2" 
+                                           pattern="[0-9]{9}" maxlength="9" 
+                                           title="9 dígitos numéricos" placeholder="123456789">
+                                    <small class="text-muted">Para añadir también a grupo de whatsapp de socios</small>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="miembros_unidad_familiar" class="form-label fw-bold">
+                                        <i class="bi bi-people me-1"></i>Miembros de la Unidad Familiar <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" class="form-control" id="miembros_unidad_familiar" 
+                                           name="miembros_unidad_familiar" required min="1" 
+                                           title="Número positivo">
+                                    <small class="text-muted">Incluyéndote a ti</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="password" class="form-label fw-bold">
+                                        <i class="bi bi-lock me-1"></i>Contraseña <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           required minlength="6" 
+                                           title="Mínimo 6 caracteres">
+                                    <small class="text-muted">Mínimo 6 caracteres. Esta será tu contraseña para acceder.</small>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="password_confirm" class="form-label fw-bold">
+                                        <i class="bi bi-lock-fill me-1"></i>Confirmar Contraseña <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" class="form-control" id="password_confirm" name="password_confirm" 
+                                           required minlength="6" 
+                                           title="Debe coincidir con la contraseña">
+                                    <small class="text-muted">Repite la contraseña</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="ano_nacimiento" class="form-label fw-bold">
+                                        <i class="bi bi-calendar me-1"></i>Año de Nacimiento <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" class="form-control" id="ano_nacimiento" name="ano_nacimiento" 
+                                           required min="1900" max="{{ current_year }}" title="Año válido">
+                                    <small class="text-muted"></small>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="forma_de_pago" class="form-label fw-bold">
+                                        <i class="bi bi-credit-card me-1"></i>Forma de Pago <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="forma_de_pago" name="forma_de_pago" required>
+                                        <option value="">Selecciona una opción</option>
+                                        <option value="bizum">Bizum</option>
+                                        <option value="transferencia">Transferencia</option>
+                                    </select>
+                                    <small class="text-muted">Si seleccionas Bizum, asegurate de que el número de móvil coincida con el de la cuenta que lo efectúa</small>
+                                    
+                                    <!-- Información de pago dinámica -->
+                                    <div id="info-pago" style="display: none;" class="mt-3 p-3 border rounded bg-light">
+                                        <div id="info-bizum" style="display: none;">
+                                            <strong><i class="bi bi-phone me-2"></i>Realiza el Bizum de 20€ al número:</strong>
+                                            <p class="mb-0 mt-2 fs-5 fw-bold text-primary">614 66 53 54</p>
+                                        </div>
+                                        <div id="info-transferencia" style="display: none;">
+                                            <strong><i class="bi bi-bank me-2"></i>Realiza la transferencia de 20€ a la cuenta:</strong>
+                                            <p class="mb-0 mt-2 fs-5 fw-bold text-primary">ES90 0078 0020 0440 0001 4737</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sección: Dirección -->
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-geo-alt me-2"></i>Dirección
+                                    </h6>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="calle" class="form-label fw-bold">
+                                        <i class="bi bi-signpost me-1"></i>Calle <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="calle" name="calle" 
+                                           required placeholder="Nombre de la calle">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="numero" class="form-label fw-bold">
+                                        <i class="bi bi-123 me-1"></i>Número <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="numero" name="numero" 
+                                           required placeholder="Número">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="piso" class="form-label fw-bold">
+                                        <i class="bi bi-building me-1"></i>Piso
+                                    </label>
+                                    <input type="text" class="form-control" id="piso" name="piso" 
+                                           placeholder="Ej: 2º B (opcional)">
+                                </div>
+                                
+                                <div class="col-md-12 mb-3">
+                                    <label for="poblacion" class="form-label fw-bold">
+                                        <i class="bi bi-geo-alt-fill me-1"></i>Población <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="poblacion" name="poblacion" 
+                                           required placeholder="Nombre de la población">
+                                </div>
+                            </div>
+                                    
+                                    <!-- Información de pago dinámica -->
+                                    <div id="info-pago" style="display: none;" class="mt-3 p-3 border rounded bg-light">
+                                        <div id="info-bizum" style="display: none;">
+                                            <strong><i class="bi bi-phone me-2"></i>Realiza el Bizum de 20€ al número:</strong>
+                                            <p class="mb-0 mt-2 fs-5 fw-bold text-primary">612 345 678</p>
+                                        </div>
+                                        <div id="info-transferencia" style="display: none;">
+                                            <strong><i class="bi bi-bank me-2"></i>Realiza la transferencia de 20€ a la cuenta:</strong>
+                                            <p class="mb-0 mt-2 fs-5 fw-bold text-primary">ES12 3456 7890 1234 5678 9012</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección: Beneficiarios (se muestra dinámicamente) -->
+                    <div id="beneficiarios-container" style="display: none;">
+                        <div class="card mb-4 border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-people-fill me-2"></i>
+                                    Datos de los Beneficiarios
+                                </h5>
+                            </div>
+                            <div class="card-body" id="beneficiarios-body">
+                                <div class="alert alert-info mb-4" role="alert">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Importante:</strong> Los beneficiarios son los miembros de la unidad familiar que van a disfrutar de los beneficios del socio.
+                                </div>
+                                <!-- Los contenedores de beneficiarios se generan dinámicamente aquí -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-send-fill me-2"></i>
+                            Enviar Solicitud
+                        </button>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Volver
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Función para limpiar espacios al final (trim)
+    function limpiarEspacios(campo) {
+        if (campo && campo.value) {
+            campo.value = campo.value.trim();
+        }
+    }
+    
+    // Convertir a mayúsculas y quitar acentos en tiempo real
+    const camposTexto = ['nombre', 'primer_apellido', 'segundo_apellido'];
+    
+    camposTexto.forEach(function(campoId) {
+        const campo = document.getElementById(campoId);
+        if (campo) {
+            // Limpiar espacios al salir del campo
+            campo.addEventListener('blur', function(e) {
+                limpiarEspacios(e.target);
+            });
+            
+            campo.addEventListener('input', function(e) {
+                let texto = e.target.value;
+                // Usar un marcador único que no puede aparecer en el texto
+                const MARKER = '\uE000'; // Carácter privado Unicode que no se usa
+                // Preservar la ñ antes de quitar acentos
+                texto = texto.replace(/ñ/g, MARKER).replace(/Ñ/g, MARKER);
+                // Quitar acentos
+                texto = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                // Restaurar la ñ
+                texto = texto.replace(new RegExp(MARKER, 'g'), 'Ñ');
+                // Convertir a mayúsculas
+                texto = texto.toUpperCase();
+                e.target.value = texto;
+            });
+        }
+    });
+    
+    // Validar móvil (solo números) y limpiar espacios
+    const movil = document.getElementById('movil');
+    if (movil) {
+        movil.addEventListener('blur', function(e) {
+            limpiarEspacios(e.target);
+        });
+        movil.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+    }
+    
+    // Validar móvil2 (solo números) y limpiar espacios (opcional)
+    const movil2 = document.getElementById('movil2');
+    if (movil2) {
+        movil2.addEventListener('blur', function(e) {
+            limpiarEspacios(e.target);
+        });
+        movil2.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+    }
+    
+    // Limpiar espacios en todos los campos de texto al enviar el formulario
+    // Validar contraseñas
+    const password = document.getElementById('password');
+    const passwordConfirm = document.getElementById('password_confirm');
+    
+    function validarContrasenas() {
+        if (password && passwordConfirm) {
+            if (password.value !== passwordConfirm.value) {
+                passwordConfirm.setCustomValidity('Las contraseñas no coinciden');
+            } else {
+                passwordConfirm.setCustomValidity('');
+            }
+        }
+    }
+    
+    if (password) {
+        password.addEventListener('input', validarContrasenas);
+    }
+    if (passwordConfirm) {
+        passwordConfirm.addEventListener('input', validarContrasenas);
+    }
+    
+    // Limpiar espacios en el campo de año de nacimiento del socio
+    const anoNacimiento = document.getElementById('ano_nacimiento');
+    if (anoNacimiento) {
+        anoNacimiento.addEventListener('blur', function(e) {
+            limpiarEspacios(e.target);
+        });
+    }
+    
+    // Limpiar espacios en campos de dirección
+    const camposDireccion = ['calle', 'numero', 'piso', 'poblacion'];
+    camposDireccion.forEach(function(campoId) {
+        const campo = document.getElementById(campoId);
+        if (campo) {
+            campo.addEventListener('blur', function(e) {
+                limpiarEspacios(e.target);
+            });
+            // Convertir calle y población a mayúsculas
+            if (campoId === 'calle' || campoId === 'poblacion') {
+                campo.addEventListener('input', function(e) {
+                    let texto = e.target.value;
+                    // Usar un marcador único que no puede aparecer en el texto
+                    const MARKER = '\uE000';
+                    // Preservar la ñ antes de quitar acentos
+                    texto = texto.replace(/ñ/g, MARKER).replace(/Ñ/g, MARKER);
+                    // Quitar acentos
+                    texto = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    // Restaurar la ñ
+                    texto = texto.replace(new RegExp(MARKER, 'g'), 'Ñ');
+                    // Convertir a mayúsculas
+                    texto = texto.toUpperCase();
+                    e.target.value = texto;
+                });
+            }
+        }
+    });
+    
+    const form = document.getElementById('formSolicitud');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Debug: verificar campos de beneficiarios antes de enviar
+            const camposBeneficiarios = form.querySelectorAll('input[name^="beneficiario_"]');
+            console.log(`[DEBUG] Campos de beneficiarios antes de enviar: ${camposBeneficiarios.length}`);
+            
+            // También buscar en todo el documento por si acaso
+            const todosLosCamposBeneficiarios = document.querySelectorAll('input[name^="beneficiario_"]');
+            console.log(`[DEBUG] Total campos beneficiarios en documento: ${todosLosCamposBeneficiarios.length}`);
+            
+            if (camposBeneficiarios.length === 0 && todosLosCamposBeneficiarios.length > 0) {
+                console.error('[ERROR] Los campos de beneficiarios NO están dentro del formulario!');
+                // Intentar moverlos al formulario
+                todosLosCamposBeneficiarios.forEach(function(campo) {
+                    if (!form.contains(campo)) {
+                        console.log(`[INFO] Moviendo campo ${campo.name} al formulario`);
+                        form.appendChild(campo);
+                    }
+                });
+            }
+            
+            camposBeneficiarios.forEach(function(campo) {
+                console.log(`[DEBUG] Campo: ${campo.name} = "${campo.value}"`);
+            });
+            
+            // Limpiar espacios de todos los campos de texto
+            const todosLosCampos = form.querySelectorAll('input[type="text"], input[type="tel"], input[type="number"]');
+            todosLosCampos.forEach(function(campo) {
+                limpiarEspacios(campo);
+            });
+            
+            // Validar contraseñas antes de enviar
+            if (password && passwordConfirm && password.value !== passwordConfirm.value) {
+                e.preventDefault();
+                alert('Las contraseñas no coinciden. Por favor, verifica que ambas contraseñas sean iguales.');
+                return false;
+            }
+            
+            // Asegurarse de que el contenedor de beneficiarios esté visible si hay beneficiarios
+            const miembrosInputCheck = document.getElementById('miembros_unidad_familiar');
+            if (miembrosInputCheck) {
+                const miembros = parseInt(miembrosInputCheck.value) || 0;
+                const beneficiariosEsperados = Math.max(0, miembros - 1);
+                if (beneficiariosEsperados > 0) {
+                    const beneficiariosContainer = document.getElementById('beneficiarios-container');
+                    if (beneficiariosContainer) {
+                        beneficiariosContainer.style.display = 'block';
+                    }
+                }
+            }
+            
+            // Validación simple de beneficiarios - solo verificar que los campos requeridos tengan el atributo required
+            // Dejamos que la validación HTML5 nativa y el backend hagan la validación real
+            // Esto solo asegura que el contenedor esté visible
+            const miembrosInput = document.getElementById('miembros_unidad_familiar');
+            if (miembrosInput) {
+                const miembros = parseInt(miembrosInput.value) || 0;
+                const beneficiariosEsperados = Math.max(0, miembros - 1);
+                
+                if (beneficiariosEsperados > 0) {
+                    const beneficiariosContainer = document.getElementById('beneficiarios-container');
+                    if (beneficiariosContainer) {
+                        beneficiariosContainer.style.display = 'block';
+                    }
+                }
+            }
+        });
+    }
+    
+    // Función para generar campos de beneficiario
+    function generarCamposBeneficiario(index) {
+        const añoActual = new Date().getFullYear();
+        return `
+            <div class="beneficiario-item mb-4 p-3 border rounded" data-index="${index}">
+                <h6 class="mb-3 text-success">
+                    <i class="bi bi-person-circle me-2"></i>
+                    Beneficiario ${index}
+                </h6>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="beneficiario_nombre_${index}" class="form-label fw-bold">
+                            <i class="bi bi-person me-1"></i>Nombre <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control beneficiario-nombre" 
+                               id="beneficiario_nombre_${index}"
+                               name="beneficiario_nombre_${index}" 
+                               form="formSolicitud"
+                               required 
+                               pattern="[A-Za-zÑñ ]+" 
+                               title="Solo letras y espacios (se permiten nombres compuestos como María José)">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="beneficiario_primer_apellido_${index}" class="form-label fw-bold">
+                            <i class="bi bi-person me-1"></i>Primer Apellido <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control beneficiario-primer-apellido" 
+                               id="beneficiario_primer_apellido_${index}"
+                               name="beneficiario_primer_apellido_${index}" 
+                               form="formSolicitud"
+                               required 
+                               pattern="[A-Za-zÑñ ]+" 
+                               title="Solo letras y espacios (se permiten apellidos compuestos)">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="beneficiario_segundo_apellido_${index}" class="form-label fw-bold">
+                            <i class="bi bi-person me-1"></i>Segundo Apellido <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control beneficiario-segundo-apellido" 
+                               id="beneficiario_segundo_apellido_${index}"
+                               name="beneficiario_segundo_apellido_${index}" 
+                               form="formSolicitud"
+                               required 
+                               pattern="[A-Za-zÑñ ]+" 
+                               title="Solo letras y espacios (se permiten apellidos compuestos)">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="beneficiario_ano_${index}" class="form-label fw-bold">
+                            <i class="bi bi-calendar me-1"></i>Año de Nacimiento <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control beneficiario-ano" 
+                               id="beneficiario_ano_${index}"
+                               name="beneficiario_ano_${index}" 
+                               form="formSolicitud"
+                               required 
+                               min="1900" 
+                               max="${añoActual}" 
+                               title="Año válido entre 1900 y ${añoActual}">
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Función para actualizar contenedores de beneficiarios
+    function actualizarBeneficiarios() {
+        const miembrosInput = document.getElementById('miembros_unidad_familiar');
+        const container = document.getElementById('beneficiarios-container');
+        const body = document.getElementById('beneficiarios-body');
+        
+        if (!miembrosInput || !container || !body) return;
+        
+        const miembros = parseInt(miembrosInput.value) || 0;
+        const beneficiarios = Math.max(0, miembros - 1); // Restar 1 porque el socio no es beneficiario
+        
+        if (beneficiarios > 0) {
+            container.style.display = 'block';
+            // Preservar el texto explicativo si existe
+            const textoExplicativo = body.querySelector('.alert-info');
+            const textoHTML = textoExplicativo ? textoExplicativo.outerHTML : '';
+            
+            // Limpiar el contenido excepto el texto explicativo
+            // Primero, eliminar todos los campos de beneficiarios existentes
+            const camposExistentes = body.querySelectorAll('.beneficiario-item');
+            camposExistentes.forEach(function(campo) {
+                campo.remove();
+            });
+            
+            // Si no hay texto explicativo, añadirlo
+            if (!body.querySelector('.alert-info')) {
+                body.innerHTML = textoHTML;
+            }
+            
+            // Crear y añadir los campos de beneficiarios directamente al body
+            for (let i = 1; i <= beneficiarios; i++) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = generarCamposBeneficiario(i);
+                // Mover todos los elementos del tempDiv al body uno por uno
+                while (tempDiv.firstChild) {
+                    body.appendChild(tempDiv.firstChild);
+                }
+            }
+            
+            // Verificar que los campos se añadieron correctamente
+            const camposGenerados = body.querySelectorAll('input[name^="beneficiario_"]');
+            console.log(`[DEBUG] Campos de beneficiarios generados: ${camposGenerados.length}`);
+            
+            // Verificar que los campos están dentro del formulario y añadir atributo form si es necesario
+            const formCheck = document.getElementById('formSolicitud');
+            if (formCheck) {
+                // Asegurar que todos los campos tengan el atributo form apuntando al formulario
+                camposGenerados.forEach(function(campo) {
+                    // Añadir el atributo form para asegurar que se envíen con el formulario
+                    campo.setAttribute('form', 'formSolicitud');
+                    console.log(`[DEBUG] Campo ${campo.name} configurado con form="formSolicitud"`);
+                });
+                
+                const camposEnForm = formCheck.querySelectorAll('input[name^="beneficiario_"]');
+                console.log(`[DEBUG] Campos dentro del formulario después de añadir: ${camposEnForm.length}`);
+            }
+            
+            // Aplicar conversión a mayúsculas y limpieza de espacios a los nuevos campos
+            const nuevosCampos = body.querySelectorAll('.beneficiario-nombre, .beneficiario-primer-apellido, .beneficiario-segundo-apellido');
+            nuevosCampos.forEach(function(campo) {
+                campo.addEventListener('blur', function(e) {
+                    limpiarEspacios(e.target);
+                });
+                campo.addEventListener('input', function(e) {
+                    let texto = e.target.value;
+                    // Usar un marcador único que no puede aparecer en el texto
+                    const MARKER = '\uE000'; // Carácter privado Unicode que no se usa
+                    // Preservar la ñ antes de quitar acentos
+                    texto = texto.replace(/ñ/g, MARKER).replace(/Ñ/g, MARKER);
+                    // Quitar acentos
+                    texto = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    // Restaurar la ñ
+                    texto = texto.replace(new RegExp(MARKER, 'g'), 'Ñ');
+                    // Convertir a mayúsculas
+                    texto = texto.toUpperCase();
+                    e.target.value = texto;
+                });
+            });
+            
+            // Limpiar espacios en campos de año de nacimiento
+            const camposAno = body.querySelectorAll('.beneficiario-ano');
+            camposAno.forEach(function(campo) {
+                campo.addEventListener('blur', function(e) {
+                    limpiarEspacios(e.target);
+                });
+            });
+        } else {
+            container.style.display = 'none';
+            body.innerHTML = '';
+        }
+    }
+    
+    // Escuchar cambios en el número de miembros
+    const miembrosInput = document.getElementById('miembros_unidad_familiar');
+    if (miembrosInput) {
+        miembrosInput.addEventListener('input', actualizarBeneficiarios);
+        miembrosInput.addEventListener('change', actualizarBeneficiarios);
+        // Ejecutar al cargar si ya hay un valor (con un pequeño delay para asegurar que el DOM esté listo)
+        if (miembrosInput.value) {
+            setTimeout(function() {
+                actualizarBeneficiarios();
+            }, 100);
+        }
+    }
+    
+    // También ejecutar cuando el DOM esté completamente cargado
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            const miembrosInputCheck = document.getElementById('miembros_unidad_familiar');
+            if (miembrosInputCheck && miembrosInputCheck.value) {
+                setTimeout(function() {
+                    actualizarBeneficiarios();
+                }, 200);
+            }
+        });
+    } else {
+        // DOM ya está cargado
+        const miembrosInputCheck = document.getElementById('miembros_unidad_familiar');
+        if (miembrosInputCheck && miembrosInputCheck.value) {
+            setTimeout(function() {
+                actualizarBeneficiarios();
+            }, 200);
+        }
+    }
+    
+    // Mostrar/ocultar información de pago según el método seleccionado
+    const formaPagoSelect = document.getElementById('forma_de_pago');
+    const infoPago = document.getElementById('info-pago');
+    const infoBizum = document.getElementById('info-bizum');
+    const infoTransferencia = document.getElementById('info-transferencia');
+    
+    if (formaPagoSelect && infoPago && infoBizum && infoTransferencia) {
+        formaPagoSelect.addEventListener('change', function() {
+            const metodo = this.value;
+            
+            if (metodo === 'bizum') {
+                infoPago.style.display = 'block';
+                infoBizum.style.display = 'block';
+                infoTransferencia.style.display = 'none';
+            } else if (metodo === 'transferencia') {
+                infoPago.style.display = 'block';
+                infoBizum.style.display = 'none';
+                infoTransferencia.style.display = 'block';
+            } else {
+                infoPago.style.display = 'none';
+                infoBizum.style.display = 'none';
+                infoTransferencia.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+
+

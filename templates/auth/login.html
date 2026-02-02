@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+
+{% block title %}Asociación de Vecinos de Montealto de Mérida - Inicio{% endblock %}
+
+{% block head %}
+<meta name="description" content="Asociación de Vecinos de Montealto de Mérida. Gestiona actividades, eventos y mantente conectado con tu comunidad. Hazte socio y participa en nuestras actividades comunitarias.">
+<meta name="keywords" content="asociación vecinos, Montealto, Mérida, comunidad, actividades, eventos, barrio, vecinos Mérida">
+<meta name="author" content="Asociación de Vecinos de Montealto">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="Asociación de Vecinos de Montealto de Mérida">
+<meta property="og:description" content="Asociación de Vecinos de Montealto de Mérida. Gestiona actividades, eventos y mantente conectado con tu comunidad.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_ES">
+<link rel="canonical" href="{{ url_for('auth.login', _external=True) }}">
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Desactivar el JavaScript problemático para el login
+    document.addEventListener('DOMContentLoaded', function() {
+        const submitButtons = document.querySelectorAll('button[type="submit"]');
+        submitButtons.forEach(function(button) {
+            // Remover cualquier listener existente
+            button.replaceWith(button.cloneNode(true));
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section con Portada -->
+<div class="hero-portada-wrapper">
+    <div class="hero-portada">
+            <img src="{{ url_for('static', filename='portada.jpg') }}" 
+                 alt="Portada Asociación de Vecinos de Montealto" 
+                 class="img-fluid w-100 hero-portada-img">
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center hero-overlay">
+                <div class="text-center text-white px-3 mb-4 hero-text-container">
+                    <h1 class="display-4 mb-3 fw-bold hero-title">
+                        Asociación de Vecinos de Montealto
+                    </h1>
+                    <p class="lead mb-4">
+                        Tu espacio para gestionar actividades, eventos y mantenerte conectado con tu comunidad
+                    </p>
+                </div>
+                <!-- Botones de Acción -->
+                <div class="d-flex justify-content-between align-items-center w-100 px-4" style="max-width: 1000px;">
+                    <!-- Botón Hazte Socio (izquierda) -->
+                    <div>
+                        <a href="{{ url_for('auth.hazte_socio') }}" class="btn-hazte-socio btn btn-lg text-white fw-bold px-5 py-3 rounded-pill shadow-lg">
+                            <i class="bi bi-person-plus-fill me-2 fs-4"></i>
+                            ¡HAZTE SOCIO!
+                        </a>
+                    </div>
+                    
+                    <!-- Texto manuscrito y Botón Empresas del Barrio (derecha) -->
+                    <div class="d-flex flex-column align-items-end">
+                        <p class="texto-manuscrito text-white mb-2 mb-md-3">
+                            ¿Necesitas algo? Consulta nuestras empresas del barrio
+                        </p>
+                        <button type="button" class="btn-empresas btn btn-lg text-white fw-bold px-5 py-3 rounded-pill shadow-lg" data-bs-toggle="modal" data-bs-target="#modalEmpresas">
+                            <i class="bi bi-building me-2 fs-4"></i>
+                            EMPRESAS DEL BARRIO
+                        </button>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+<!-- Sección: Nuestras Fiestas -->
+<div class="container mt-5 pt-5">
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4 fw-bold">
+            <i class="bi bi-camera-fill me-2 text-primary"></i>
+            Nuestras Fiestas
+        </h2>
+    </div>
+    <div class="col-md-4 mb-4">
+        <a href="#" class="galeria-link text-decoration-none">
+            <div class="galeria-card galeria-card-1">
+                <div class="galeria-imagen">
+                    <img src="{{ url_for('static', filename='navidad.png') }}" 
+                         alt="El Barrio de la Navidad" 
+                         class="img-fluid">
+                </div>
+                <div class="galeria-overlay">
+                    <h4 class="text-white fw-bold mb-0">
+                        <i class="bi bi-snow me-2"></i>
+                        El Barrio de la Navidad
+                    </h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <a href="#" class="galeria-link text-decoration-none">
+            <div class="galeria-card galeria-card-2">
+                <div class="galeria-imagen">
+                    <img src="{{ url_for('static', filename='fiestas.png') }}" 
+                         alt="Ferias y Fiestas" 
+                         class="img-fluid">
+                </div>
+                <div class="galeria-overlay">
+                    <h4 class="text-white fw-bold mb-0">
+                        <i class="bi bi-calendar-event me-2"></i>
+                        Ferias y Fiestas
+                    </h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <a href="#" class="galeria-link text-decoration-none">
+            <div class="galeria-card galeria-card-3">
+                <div class="galeria-imagen">
+                    <img src="{{ url_for('static', filename='hallowen.png') }}" 
+                         alt="Halloween" 
+                         class="img-fluid">
+                </div>
+                <div class="galeria-overlay">
+                    <h4 class="text-white fw-bold mb-0">
+                        <i class="bi bi-ghost me-2"></i>
+                        Halloween
+                    </h4>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+
+<!-- Slider de Patrocinadores -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="patrocinadores-slider-container py-4 rounded">
+            <h5 class="text-center text-muted mb-4">
+                <i class="bi bi-star-fill text-warning me-2"></i>
+                Nuestros Patrocinadores
+            </h5>
+            <!-- Slider superior - hacia la izquierda -->
+            <div class="patrocinadores-slider mb-3">
+                <div class="patrocinadores-track patrocinadores-track-left">
+                    <!-- Primera mitad de logotipos -->
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/acuarela centro de educacion infantil.jpg') }}" alt="Acuarela Centro de Educación Infantil" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/aloha.jpg') }}" alt="Aloha" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/amantes de la comida portuguesa.jpg') }}" alt="Amantes de la Comida Portuguesa" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/asador de pollos el kikiriki.jpg') }}" alt="Asador de Pollos El Kikiriki" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/autoescuela martin.jpg') }}" alt="Autoescuela Martín" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/ayuva.jpg') }}" alt="Ayuva" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Azimut.jpg') }}" alt="Azimut" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/bar los segovianos.jpg') }}" alt="Bar Los Segovianos" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/bar rialto rrss.jpg') }}" alt="Bar Rialto" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/berlin 1989.jpg') }}" alt="Berlin 1989" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Blanco fotografos .jpg') }}" alt="Blanco Fotógrafos" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/carnicería Carmona.jpeg') }}" alt="Carnicería Carmona" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Carpinteria Domingo Garcia.jpg') }}" alt="Carpintería Domingo García" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Cascaras .jpg') }}" alt="Cáscaras" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/cerveceria pradan.jpg') }}" alt="Cervecería Pradan" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/deluxe hotels suites.jpg') }}" alt="Deluxe Hotels Suites" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/ecobox modular.jpg') }}" alt="Ecobox Modular" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/el capricho de Carmen.jpg') }}" alt="El Capricho de Carmen" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/el palacio del pollo.jpg') }}" alt="El Palacio del Pollo" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/floristeria aralia .jpg') }}" alt="Floristería Aralia" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/HIDRAVAL.jpg') }}" alt="HIDRAVAL" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/HYR.jpg') }}" alt="HYR" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/inmobiliaria metro cuadrado.png') }}" alt="Inmobiliaria Metro Cuadrado" class="patrocinador-logo">
+                    </div>
+                    <!-- Segunda copia para efecto continuo -->
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/acuarela centro de educacion infantil.jpg') }}" alt="Acuarela Centro de Educación Infantil" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/aloha.jpg') }}" alt="Aloha" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/amantes de la comida portuguesa.jpg') }}" alt="Amantes de la Comida Portuguesa" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/asador de pollos el kikiriki.jpg') }}" alt="Asador de Pollos El Kikiriki" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/autoescuela martin.jpg') }}" alt="Autoescuela Martín" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/ayuva.jpg') }}" alt="Ayuva" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Azimut.jpg') }}" alt="Azimut" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/bar los segovianos.jpg') }}" alt="Bar Los Segovianos" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/bar rialto rrss.jpg') }}" alt="Bar Rialto" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/berlin 1989.jpg') }}" alt="Berlin 1989" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Blanco fotografos .jpg') }}" alt="Blanco Fotógrafos" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/carnicería Carmona.jpeg') }}" alt="Carnicería Carmona" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Carpinteria Domingo Garcia.jpg') }}" alt="Carpintería Domingo García" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Cascaras .jpg') }}" alt="Cáscaras" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/cerveceria pradan.jpg') }}" alt="Cervecería Pradan" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/deluxe hotels suites.jpg') }}" alt="Deluxe Hotels Suites" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/ecobox modular.jpg') }}" alt="Ecobox Modular" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/el capricho de Carmen.jpg') }}" alt="El Capricho de Carmen" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/el palacio del pollo.jpg') }}" alt="El Palacio del Pollo" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/floristeria aralia .jpg') }}" alt="Floristería Aralia" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/HIDRAVAL.jpg') }}" alt="HIDRAVAL" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/HYR.jpg') }}" alt="HYR" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/inmobiliaria metro cuadrado.png') }}" alt="Inmobiliaria Metro Cuadrado" class="patrocinador-logo">
+                    </div>
+                </div>
+            </div>
+            <!-- Slider inferior - hacia la derecha -->
+            <div class="patrocinadores-slider">
+                <div class="patrocinadores-track patrocinadores-track-right">
+                    <!-- Segunda mitad de logotipos -->
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/jd salete.jpg') }}" alt="JD Salete" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/jose maria manzano centro de fisioterapia.jpg') }}" alt="José María Manzano Centro de Fisioterapia" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/la mejilloneria - restaurante teatro.jpg') }}" alt="La Mejillonería - Restaurante Teatro" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/la tribu montessori.jpg') }}" alt="La Tribu Montessori" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/logo_rm.webp') }}" alt="RM Recambios y Automoción" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/losada electricidad.jpg') }}" alt="Losada Electricidad" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/lvdica automocion.jpg') }}" alt="LVDICA Automoción" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Marta Álvarez  abogada.jpg') }}" alt="Marta Álvarez Abogada" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Mérida automoción .jpg') }}" alt="Mérida Automoción" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Mérida menaje.jpg') }}" alt="Mérida Menaje" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/meson castellano.jpg') }}" alt="Mesón Castellano" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/metal tyres rrss.jpg') }}" alt="Metal Tyres" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/metal tyres.jpg') }}" alt="Metal Tyres" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/pilates asociacion.jpg') }}" alt="Pilates Asociación" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/restaurante nirri.jpg') }}" alt="Restaurante Nirri" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/rm recambios y automicion.jpg') }}" alt="RM Recambios y Automoción" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/sabor brasas y leña 2.jpg') }}" alt="Sabor Brasas y Leña" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/sabor brasas y leña.jpg') }}" alt="Sabor Brasas y Leña" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/solarcheck.jpg') }}" alt="Solarcheck" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/talleres navas motor.jpg') }}" alt="Talleres Navas Motor" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/vipa carpinteria.jpg') }}" alt="VIPA Carpintería" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Yoga asociacion .jpg') }}" alt="Yoga Asociación" class="patrocinador-logo">
+                    </div>
+                    <!-- Segunda copia para efecto continuo -->
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/jd salete.jpg') }}" alt="JD Salete" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/jose maria manzano centro de fisioterapia.jpg') }}" alt="José María Manzano Centro de Fisioterapia" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/la mejilloneria - restaurante teatro.jpg') }}" alt="La Mejillonería - Restaurante Teatro" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/la tribu montessori.jpg') }}" alt="La Tribu Montessori" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/logo_rm.webp') }}" alt="RM Recambios y Automoción" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/losada electricidad.jpg') }}" alt="Losada Electricidad" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/lvdica automocion.jpg') }}" alt="LVDICA Automoción" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Marta Álvarez  abogada.jpg') }}" alt="Marta Álvarez Abogada" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Mérida automoción .jpg') }}" alt="Mérida Automoción" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Mérida menaje.jpg') }}" alt="Mérida Menaje" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/meson castellano.jpg') }}" alt="Mesón Castellano" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/metal tyres rrss.jpg') }}" alt="Metal Tyres" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/metal tyres.jpg') }}" alt="Metal Tyres" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/pilates asociacion.jpg') }}" alt="Pilates Asociación" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/restaurante nirri.jpg') }}" alt="Restaurante Nirri" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/rm recambios y automicion.jpg') }}" alt="RM Recambios y Automoción" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/sabor brasas y leña 2.jpg') }}" alt="Sabor Brasas y Leña" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/sabor brasas y leña.jpg') }}" alt="Sabor Brasas y Leña" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/solarcheck.jpg') }}" alt="Solarcheck" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/talleres navas motor.jpg') }}" alt="Talleres Navas Motor" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/vipa carpinteria.jpg') }}" alt="VIPA Carpintería" class="patrocinador-logo">
+                    </div>
+                    <div class="patrocinador-item">
+                        <img src="{{ url_for('static', filename='patrocinadores/Yoga asociacion .jpg') }}" alt="Yoga Asociación" class="patrocinador-logo">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido Principal -->
+<div class="row">
+    <!-- Información sobre la Asociación -->
+    <div class="col-lg-12 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Sobre Nuestra Asociación
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    La <strong>Asociación de Vecinos de Montealto de Mérida</strong> es una organización sin ánimo de lucro que tiene como objetivo 
+                    mejorar la calidad de vida de todos los residentes de nuestra comunidad en el barrio de Montealto, Mérida, Badajoz, Extremadura.
+                </p>
+                <p class="card-text">
+                    Trabajamos para fomentar la participación ciudadana, organizar actividades culturales y recreativas, 
+                    y defender los intereses de todos los vecinos del barrio de Montealto en Mérida.
+                </p>
+                <h5 class="mt-4 mb-3">
+                    <i class="bi bi-star-fill text-warning me-2"></i>
+                    Nuestros Servicios
+                </h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <strong>Gestión de Actividades:</strong> Organizamos eventos y actividades para toda la comunidad
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <strong>Comunicación:</strong> Mantente informado sobre las novedades del vecindario
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <strong>Participación:</strong> Únete a nuestras actividades y eventos comunitarios
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <strong>Representación:</strong> Defendemos los intereses de todos los vecinos
+                    </li>
+                </ul>
+                <h5 class="mt-4 mb-3">
+                    <i class="bi bi-people-fill text-primary me-2"></i>
+                    ¿Cómo Participar?
+                </h5>
+                <p class="card-text">
+                    Si eres socio de nuestra asociación, puedes acceder a tu área personal donde podrás:
+                </p>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-calendar-event text-primary me-2"></i>
+                        Ver y apuntarte a actividades y eventos
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-person-check text-primary me-2"></i>
+                        Gestionar tus inscripciones
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-person-circle text-primary me-2"></i>
+                        Actualizar tu información personal
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Modal Empresas del Barrio -->
+<div class="modal fade" id="modalEmpresas" tabindex="-1" aria-labelledby="modalEmpresasLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="modalEmpresasLabel">
+                    <i class="bi bi-building me-2"></i>
+                    Empresas del Barrio
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Pestañas por categorías -->
+                <ul class="nav nav-tabs mb-4" id="empresasTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="comida-tab" data-bs-toggle="tab" data-bs-target="#comida" type="button" role="tab">
+                            <i class="bi bi-egg-fried me-2"></i>Comida y Restaurantes
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pollos-tab" data-bs-toggle="tab" data-bs-target="#pollos" type="button" role="tab">
+                            <i class="bi bi-basket me-2"></i>Pollos Asados
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="servicios-tab" data-bs-toggle="tab" data-bs-target="#servicios" type="button" role="tab">
+                            <i class="bi bi-tools me-2"></i>Servicios (Electricidad, Fontanería, Carpintería)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="automocion-tab" data-bs-toggle="tab" data-bs-target="#automocion" type="button" role="tab">
+                            <i class="bi bi-car-front me-2"></i>Automoción
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="educacion-tab" data-bs-toggle="tab" data-bs-target="#educacion" type="button" role="tab">
+                            <i class="bi bi-book me-2"></i>Educación
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="otros-tab" data-bs-toggle="tab" data-bs-target="#otros" type="button" role="tab">
+                            <i class="bi bi-grid me-2"></i>Otros
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Contenido de las pestañas -->
+                <div class="tab-content" id="empresasTabContent">
+                    <!-- Pestaña: Comida y Restaurantes -->
+                    <div class="tab-pane fade show active" id="comida" role="tabpanel">
+                        <div class="text-center py-5">
+                            <div class="alert alert-info border-0 shadow-sm" style="font-size: 1.25rem;">
+                                <i class="bi bi-megaphone-fill me-2"></i>
+                                <strong>Promocionate aquí por solo 50€ anuales</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pestaña: Pollos Asados -->
+                    <div class="tab-pane fade" id="pollos" role="tabpanel">
+                        <div class="text-center py-5">
+                            <div class="alert alert-info border-0 shadow-sm" style="font-size: 1.25rem;">
+                                <i class="bi bi-megaphone-fill me-2"></i>
+                                <strong>Promocionate aquí por solo 50€ anuales</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pestaña: Servicios (Electricidad, Fontanería, Carpintería) -->
+                    <div class="tab-pane fade" id="servicios" role="tabpanel">
+                        <div class="text-center py-5">
+                            <div class="alert alert-info border-0 shadow-sm" style="font-size: 1.25rem;">
+                                <i class="bi bi-megaphone-fill me-2"></i>
+                                <strong>Promocionate aquí por solo 50€ anuales</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pestaña: Automoción -->
+                    <div class="tab-pane fade" id="automocion" role="tabpanel">
+                        <div class="text-center py-5">
+                            <div class="alert alert-info border-0 shadow-sm" style="font-size: 1.25rem;">
+                                <i class="bi bi-megaphone-fill me-2"></i>
+                                <strong>Promocionate aquí por solo 50€ anuales</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pestaña: Educación -->
+                    <div class="tab-pane fade" id="educacion" role="tabpanel">
+                        <div class="text-center py-5">
+                            <div class="alert alert-info border-0 shadow-sm" style="font-size: 1.25rem;">
+                                <i class="bi bi-megaphone-fill me-2"></i>
+                                <strong>Promocionate aquí por solo 50€ anuales</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pestaña: Otros -->
+                    <div class="tab-pane fade" id="otros" role="tabpanel">
+                        <div class="text-center py-5">
+                            <div class="alert alert-info border-0 shadow-sm" style="font-size: 1.25rem;">
+                                <i class="bi bi-megaphone-fill me-2"></i>
+                                <strong>Promocionate aquí por solo 50€ anuales</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

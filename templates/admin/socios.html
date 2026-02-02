@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Socios - Asociación de Vecinos de Montealto{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-people me-2"></i>
+        Gestión de Socios
+    </h1>
+    <a href="{{ url_for('admin.nuevo_socio') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus me-2"></i>
+        Nuevo Socio
+    </a>
+</div>
+
+<!-- Buscador y Opciones -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('admin.gestion_socios') }}" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" name="search" 
+                           placeholder="Buscar por nombre, email o fecha de validez..." 
+                           value="{{ search_query or '' }}" id="searchInput">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>
+                        Buscar
+                    </button>
+                    {% if search_query %}
+                        <a href="{{ url_for('admin.gestion_socios') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Limpiar
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+        <hr>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="mostrarBeneficiarios" 
+                   onchange="toggleBeneficiarios()">
+            <label class="form-check-label" for="mostrarBeneficiarios">
+                <i class="bi bi-people-fill me-1"></i>
+                Mostrar beneficiarios
+            </label>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if search_query %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Búsqueda:</strong> "{{ search_query }}" - {{ socios|length }} resultado(s) encontrado(s)
+            </div>
+        {% endif %}
+        
+        {% if socios %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Fecha de Alta</th>
+                            <th>Fecha de Validez</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for socio in socios %}
+                            <tr class="socio-row" data-socio-id="{{ socio.id }}">
+                                <td>
+                                    <strong>{{ socio.nombre }}</strong>
+                                    {% if socio.numero_socio %}
+                                        <br><small class="text-muted">Nº Socio: <strong>{{ socio.numero_socio }}</strong></small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ socio.email }}
+                                    {% if socio.password_plain %}
+                                        <br><small class="text-info">Contraseña: <code>{{ socio.password_plain }}</code></small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ socio.fecha_alta.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <span class="{% if socio.suscripcion_vencida() %}text-danger{% elif socio.suscripcion_por_vencer() %}text-warning{% else %}text-success{% endif %}">
+                                        {{ socio.fecha_validez.strftime('%d/%m/%Y') }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if socio.suscripcion_vencida() %}
+                                        <span class="badge bg-danger">Vencida</span>
+                                    {% elif socio.suscripcion_por_vencer() %}
+                                        <span class="badge bg-warning">Por Vencer</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Activa</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('admin.editar_socio', socio_id=socio.id) }}" 
+                                           class="btn btn-outline-primary btn-sm" 
+                                           title="Editar Socio">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{{ url_for('admin.renovar_socio', socio_id=socio.id) }}" 
+                                           class="btn btn-outline-warning btn-sm" 
+                                           title="Renovar Suscripción">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% if socio.beneficiarios_lista %}
+                                <tr class="beneficiarios-row" data-socio-id="{{ socio.id }}" style="display: none;">
+                                    <td colspan="6" class="bg-light">
+                                        <div class="ps-4 py-2">
+                                            <strong class="text-success">
+                                                <i class="bi bi-people-fill me-2"></i>
+                                                Beneficiarios ({{ socio.beneficiarios_lista|length }}):
+                                            </strong>
+                                            <div class="mt-2">
+                                                {% for beneficiario in socio.beneficiarios_lista %}
+                                                    <div class="d-inline-block me-3 mb-2">
+                                                        <span class="badge bg-success">
+                                                            {% if beneficiario.numero_beneficiario %}<strong>{{ beneficiario.numero_beneficiario }}</strong> - {% endif %}
+                                                            {{ beneficiario.nombre }} {{ beneficiario.primer_apellido }}{% if beneficiario.segundo_apellido %} {{ beneficiario.segundo_apellido }}{% endif %}
+                                                            <small class="ms-1">({{ beneficiario.ano_nacimiento }})</small>
+                                                        </span>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-people text-muted fs-1"></i>
+                <h4 class="mt-3">No hay socios registrados</h4>
+                <p>Comienza agregando el primer socio a la asociación.</p>
+                <a href="{{ url_for('admin.nuevo_socio') }}" class="btn btn-primary">
+                    <i class="bi bi-person-plus me-2"></i>
+                    Registrar Primer Socio
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Función para mostrar/ocultar beneficiarios
+function toggleBeneficiarios() {
+    const checkbox = document.getElementById('mostrarBeneficiarios');
+    const beneficiariosRows = document.querySelectorAll('.beneficiarios-row');
+    
+    if (checkbox.checked) {
+        beneficiariosRows.forEach(function(row) {
+            row.style.display = '';
+        });
+    } else {
+        beneficiariosRows.forEach(function(row) {
+            row.style.display = 'none';
+        });
+    }
+}
+
+// Búsqueda dinámica en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            // Solo buscar si hay al menos 2 caracteres
+            if (query.length >= 2 || query.length === 0) {
+                searchTimeout = setTimeout(function() {
+                    // Realizar búsqueda automática
+                    const form = searchInput.closest('form');
+                    if (form) {
+                        form.submit();
+                    }
+                }, 500); // Esperar 500ms después del último carácter
+            }
+        });
+        
+        // Limpiar búsqueda con Escape
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                const form = this.closest('form');
+                if (form) {
+                    form.submit();
+                }
+            }
+        });
+    }
+    
+    // Inicializar estado de beneficiarios (ocultos por defecto)
+    toggleBeneficiarios();
+});
+</script>
+{% endblock %}
