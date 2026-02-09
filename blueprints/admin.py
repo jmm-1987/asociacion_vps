@@ -19,6 +19,8 @@ from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
 
 def quitar_acentos(texto):
     """Convierte texto a mayúsculas y quita acentos, pero preserva la ñ"""
@@ -1151,6 +1153,204 @@ def solicitudes_socios():
                          total_por_confirmar=total_por_confirmar,
                          total_activas=total_activas,
                          total_rechazadas=total_rechazadas)
+
+@admin_bp.route('/solicitudes-confirmadas/excel')
+@login_required
+@directiva_required
+def exportar_solicitudes_confirmadas_excel():
+    """Exporta las solicitudes confirmadas a Excel"""
+    try:
+        # Obtener solo solicitudes confirmadas (estado 'activa')
+        solicitudes = SolicitudSocio.query.filter_by(estado='activa').order_by(SolicitudSocio.fecha_confirmacion.desc()).all()
+        
+        # Crear libro de trabajo Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Solicitudes Confirmadas"
+        
+        # Estilos para encabezados
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Encabezados
+        headers = [
+            'Fecha Solicitud', 'Fecha Confirmación', 'Nombre', 'Primer Apellido', 'Segundo Apellido',
+            'Móvil', 'Móvil 2', 'Calle', 'Número', 'Piso', 'Población', 'Dirección Completa',
+            'Fecha Nacimiento', 'Miembros Familia', 'Forma de Pago', 'Nombre Usuario', 'Contraseña'
+        ]
+        
+        # Escribir encabezados
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+        
+        # Escribir datos
+        for row_num, solicitud in enumerate(solicitudes, 2):
+            # Calcular nombre de usuario
+            nombre_usuario = calcular_nombre_usuario_solicitud(solicitud)
+            
+            # Formatear dirección completa
+            direccion_completa = ""
+            if solicitud.calle and solicitud.numero and solicitud.poblacion:
+                direccion_completa = f"{solicitud.calle} {solicitud.numero}"
+                if solicitud.piso:
+                    direccion_completa += f", {solicitud.piso}"
+                direccion_completa += f", {solicitud.poblacion}"
+            
+            # Formatear fecha de nacimiento
+            fecha_nacimiento_str = solicitud.fecha_nacimiento.strftime('%d/%m/%Y') if solicitud.fecha_nacimiento else ''
+            
+            # Datos de la fila
+            row_data = [
+                solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M') if solicitud.fecha_solicitud else '',
+                solicitud.fecha_confirmacion.strftime('%d/%m/%Y %H:%M') if solicitud.fecha_confirmacion else '',
+                solicitud.nombre,
+                solicitud.primer_apellido,
+                solicitud.segundo_apellido or '',
+                solicitud.movil,
+                solicitud.movil2 or '',
+                solicitud.calle or '',
+                solicitud.numero or '',
+                solicitud.piso or '',
+                solicitud.poblacion or '',
+                direccion_completa,
+                fecha_nacimiento_str,
+                solicitud.miembros_unidad_familiar,
+                solicitud.forma_de_pago,
+                nombre_usuario,
+                solicitud.password_solicitud or ''
+            ]
+            
+            for col_num, value in enumerate(row_data, 1):
+                ws.cell(row=row_num, column=col_num, value=value)
+        
+        # Ajustar ancho de columnas
+        column_widths = [18, 18, 15, 15, 15, 12, 12, 20, 8, 10, 15, 40, 15, 12, 12, 20, 15]
+        for col_num, width in enumerate(column_widths, 1):
+            ws.column_dimensions[ws.cell(row=1, column=col_num).column_letter].width = width
+        
+        # Guardar en memoria
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # Generar nombre de archivo
+        fecha_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'solicitudes_confirmadas_{fecha_str}.xlsx'
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        flash(f'Error al exportar solicitudes confirmadas a Excel: {str(e)}', 'error')
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for('admin.solicitudes_socios'))
+
+@admin_bp.route('/socios/excel')
+@login_required
+@directiva_required
+def exportar_socios_excel():
+    """Exporta todos los socios a Excel"""
+    try:
+        # Obtener todos los socios
+        socios = User.query.filter(User.rol == 'socio').order_by(User.nombre).all()
+        
+        # Crear libro de trabajo Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Socios"
+        
+        # Estilos para encabezados
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Encabezados
+        headers = [
+            'Número Socio', 'Nombre', 'Nombre Usuario', 'Email', 'Fecha Alta', 'Fecha Validez',
+            'Año Nacimiento', 'Fecha Nacimiento', 'Calle', 'Número', 'Piso', 'Población',
+            'Dirección Completa', 'Contraseña'
+        ]
+        
+        # Escribir encabezados
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+        
+        # Escribir datos
+        for row_num, socio in enumerate(socios, 2):
+            # Formatear dirección completa
+            direccion_completa = ""
+            if socio.calle and socio.numero and socio.poblacion:
+                direccion_completa = f"{socio.calle} {socio.numero}"
+                if socio.piso:
+                    direccion_completa += f", {socio.piso}"
+                direccion_completa += f", {socio.poblacion}"
+            
+            # Formatear fechas
+            fecha_alta_str = socio.fecha_alta.strftime('%d/%m/%Y') if socio.fecha_alta else ''
+            fecha_validez_str = socio.fecha_validez.strftime('%d/%m/%Y') if socio.fecha_validez else ''
+            fecha_nacimiento_str = socio.fecha_nacimiento.strftime('%d/%m/%Y') if socio.fecha_nacimiento else ''
+            
+            # Datos de la fila
+            row_data = [
+                socio.numero_socio or '',
+                socio.nombre,
+                socio.nombre_usuario,
+                socio.email or '',
+                fecha_alta_str,
+                fecha_validez_str,
+                socio.ano_nacimiento or '',
+                fecha_nacimiento_str,
+                socio.calle or '',
+                socio.numero or '',
+                socio.piso or '',
+                socio.poblacion or '',
+                direccion_completa,
+                socio.password_plain or ''
+            ]
+            
+            for col_num, value in enumerate(row_data, 1):
+                ws.cell(row=row_num, column=col_num, value=value)
+        
+        # Ajustar ancho de columnas
+        column_widths = [12, 25, 20, 25, 12, 12, 12, 12, 20, 8, 10, 15, 40, 15]
+        for col_num, width in enumerate(column_widths, 1):
+            ws.column_dimensions[ws.cell(row=1, column=col_num).column_letter].width = width
+        
+        # Guardar en memoria
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # Generar nombre de archivo
+        fecha_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'socios_{fecha_str}.xlsx'
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        flash(f'Error al exportar socios a Excel: {str(e)}', 'error')
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for('admin.gestion_socios'))
 
 @admin_bp.route('/solicitudes-socios/<int:solicitud_id>')
 @login_required

@@ -55,6 +55,16 @@
                     </div>
                 </div>
                 <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <strong>Dirección:</strong><br>
+                        {% if solicitud.calle and solicitud.numero and solicitud.poblacion %}
+                            {{ solicitud.calle }} {{ solicitud.numero }}{% if solicitud.piso %}, {{ solicitud.piso }}{% endif %}, {{ solicitud.poblacion }}
+                        {% else %}
+                            <span class="text-muted">No especificada</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-md-6 mb-3">
                         <strong>Miembros de la Unidad Familiar:</strong><br>
                         <span class="badge bg-info">{{ solicitud.miembros_unidad_familiar }}</span>

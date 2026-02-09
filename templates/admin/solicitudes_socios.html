@@ -8,10 +8,18 @@
         <i class="bi bi-person-plus-fill me-2 text-primary"></i>
         Solicitudes Nuevos Socios
     </h1>
-    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-primary">
-        <i class="bi bi-arrow-left me-1"></i>
-        Volver al Panel
-    </a>
+    <div>
+        {% if total_activas > 0 %}
+        <a href="{{ url_for('admin.exportar_solicitudes_confirmadas_excel') }}" class="btn btn-success me-2">
+            <i class="bi bi-file-earmark-excel me-1"></i>
+            Exportar Confirmadas a Excel
+        </a>
+        {% endif %}
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Volver al Panel
+        </a>
+    </div>
 </div>
 
 <!-- Estadísticas -->
@@ -109,6 +117,7 @@
                             <th>Nombre Completo</th>
                             <th>Nombre de Usuario</th>
                             <th>Móvil</th>
+                            <th>Dirección</th>
                             <th>Miembros Familia</th>
                             <th>Forma de Pago</th>
                             <th>Estado</th>
@@ -131,6 +140,13 @@
                                 <code class="text-primary">{{ item.nombre_usuario }}</code>
                             </td>
                             <td>{{ solicitud.movil }}</td>
+                            <td>
+                                {% if solicitud.calle and solicitud.numero and solicitud.poblacion %}
+                                    {{ solicitud.calle }} {{ solicitud.numero }}{% if solicitud.piso %}, {{ solicitud.piso }}{% endif %}, {{ solicitud.poblacion }}
+                                {% else %}
+                                    <span class="text-muted">No especificada</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="badge bg-info">{{ solicitud.miembros_unidad_familiar }}</span>
                             </td>
