@@ -1276,7 +1276,7 @@ def exportar_socios_excel():
         
         # Encabezados
         headers = [
-            'Número Socio', 'Nombre', 'Nombre Usuario', 'Email', 'Fecha Alta', 'Fecha Validez',
+            'Número Socio', 'Nombre', 'Nombre Usuario', 'Fecha Alta', 'Fecha Validez',
             'Año Nacimiento', 'Fecha Nacimiento', 'Calle', 'Número', 'Piso', 'Población',
             'Dirección Completa', 'Contraseña'
         ]
@@ -1309,7 +1309,6 @@ def exportar_socios_excel():
                 socio.numero_socio or '',
                 socio.nombre,
                 socio.nombre_usuario,
-                socio.email or '',
                 fecha_alta_str,
                 fecha_validez_str,
                 socio.ano_nacimiento or '',
@@ -1326,7 +1325,7 @@ def exportar_socios_excel():
                 ws.cell(row=row_num, column=col_num, value=value)
         
         # Ajustar ancho de columnas
-        column_widths = [12, 25, 20, 25, 12, 12, 12, 12, 20, 8, 10, 15, 40, 15]
+        column_widths = [12, 25, 20, 12, 12, 12, 12, 20, 8, 10, 15, 40, 15]
         for col_num, width in enumerate(column_widths, 1):
             ws.column_dimensions[ws.cell(row=1, column=col_num).column_letter].width = width
         
