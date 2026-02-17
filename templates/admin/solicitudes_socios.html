@@ -22,79 +22,53 @@
     </div>
 </div>
 
-<!-- Estadísticas -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title mb-0">Por Confirmar</h5>
-                        <h2 class="mb-0">{{ total_por_confirmar }}</h2>
-                    </div>
-                    <div>
-                        <i class="bi bi-clock-history fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title mb-0">Confirmadas</h5>
-                        <h2 class="mb-0">{{ total_activas }}</h2>
-                    </div>
-                    <div>
-                        <i class="bi bi-check-circle-fill fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-danger text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title mb-0">Rechazadas</h5>
-                        <h2 class="mb-0">{{ total_rechazadas }}</h2>
-                    </div>
-                    <div>
-                        <i class="bi bi-x-circle-fill fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Filtros -->
+<!-- Filtros y Búsqueda -->
 <div class="card mb-4">
     <div class="card-body">
-        <div class="btn-group" role="group">
-            <a href="{{ url_for('admin.solicitudes_socios', estado='por_confirmar') }}" 
-               class="btn {% if estado_filtro == 'por_confirmar' %}btn-warning{% else %}btn-outline-warning{% endif %}">
-                <i class="bi bi-clock-history me-1"></i>
-                Por Confirmar ({{ total_por_confirmar }})
-            </a>
-            <a href="{{ url_for('admin.solicitudes_socios', estado='activa') }}" 
-               class="btn {% if estado_filtro == 'activa' %}btn-success{% else %}btn-outline-success{% endif %}">
-                <i class="bi bi-check-circle me-1"></i>
-                Confirmadas ({{ total_activas }})
-            </a>
-            <a href="{{ url_for('admin.solicitudes_socios', estado='rechazada') }}" 
-               class="btn {% if estado_filtro == 'rechazada' %}btn-danger{% else %}btn-outline-danger{% endif %}">
-                <i class="bi bi-x-circle me-1"></i>
-                Rechazadas ({{ total_rechazadas }})
-            </a>
-            <a href="{{ url_for('admin.solicitudes_socios', estado='todas') }}" 
-               class="btn {% if estado_filtro == 'todas' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                <i class="bi bi-list-ul me-1"></i>
-                Todas
-            </a>
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('admin.solicitudes_socios', estado='por_confirmar', search=search_query or '') }}" 
+                       class="btn {% if estado_filtro == 'por_confirmar' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Por Confirmar ({{ total_por_confirmar }})
+                    </a>
+                    <a href="{{ url_for('admin.solicitudes_socios', estado='activa', search=search_query or '') }}" 
+                       class="btn {% if estado_filtro == 'activa' %}btn-success{% else %}btn-outline-success{% endif %}">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Confirmadas ({{ total_activas }})
+                    </a>
+                    <a href="{{ url_for('admin.solicitudes_socios', estado='rechazada', search=search_query or '') }}" 
+                       class="btn {% if estado_filtro == 'rechazada' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Rechazadas ({{ total_rechazadas }})
+                    </a>
+                    <a href="{{ url_for('admin.solicitudes_socios', estado='todas', search=search_query or '') }}" 
+                       class="btn {% if estado_filtro == 'todas' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        <i class="bi bi-list-ul me-1"></i>
+                        Todas
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <form method="GET" action="{{ url_for('admin.solicitudes_socios') }}" class="d-flex">
+                    <input type="hidden" name="estado" value="{{ estado_filtro }}">
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           placeholder="Buscar por nombre, móvil, dirección..." 
+                           value="{{ search_query or '' }}"
+                           id="searchInput">
+                    <button type="submit" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    {% if search_query %}
+                    <a href="{{ url_for('admin.solicitudes_socios', estado=estado_filtro) }}" class="btn btn-outline-danger ms-2" title="Limpiar búsqueda">
+                        <i class="bi bi-x"></i>
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
         </div>
     </div>
 </div>

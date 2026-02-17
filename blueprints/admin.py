@@ -98,15 +98,38 @@ def gestion_socios():
         
         query = query.filter(db.or_(*condiciones))
     
-    # Aplicar búsqueda
+    # Aplicar búsqueda en múltiples campos
     if search_query:
-        query = query.filter(
-            db.or_(
-                User.nombre.contains(search_query),
-                User.nombre_usuario.contains(search_query),
-                db.func.strftime('%d/%m/%Y', User.fecha_validez).contains(search_query)
+        # Construir condiciones de búsqueda
+        condiciones_busqueda = [
+            User.nombre.contains(search_query),
+            User.nombre_usuario.contains(search_query),
+            User.numero_socio.contains(search_query),
+            User.calle.contains(search_query),
+            User.numero.contains(search_query),
+            User.piso.contains(search_query),
+            User.poblacion.contains(search_query),
+            db.func.strftime('%d/%m/%Y', User.fecha_alta).contains(search_query),
+            db.func.strftime('%d/%m/%Y', User.fecha_validez).contains(search_query)
+        ]
+        
+        # Agregar búsqueda en fecha de nacimiento (solo si el campo no es None)
+        condiciones_busqueda.append(
+            db.and_(
+                User.fecha_nacimiento.isnot(None),
+                db.func.strftime('%d/%m/%Y', User.fecha_nacimiento).contains(search_query)
             )
         )
+        
+        # Agregar búsqueda en año de nacimiento (solo si el campo no es None)
+        condiciones_busqueda.append(
+            db.and_(
+                User.ano_nacimiento.isnot(None),
+                db.cast(User.ano_nacimiento, db.String).contains(search_query)
+            )
+        )
+        
+        query = query.filter(db.or_(*condiciones_busqueda))
     
     socios = query.order_by(User.nombre).all()
     
@@ -1126,11 +1149,32 @@ def calcular_nombre_usuario_solicitud(solicitud):
 def solicitudes_socios():
     """Vista para ver las solicitudes de nuevos socios"""
     estado_filtro = request.args.get('estado', 'por_confirmar')
+    search_query = request.args.get('search', '').strip()
     
+    # Construir query base según el filtro de estado
     if estado_filtro == 'todas':
-        solicitudes = SolicitudSocio.query.order_by(SolicitudSocio.fecha_solicitud.desc()).all()
+        query = SolicitudSocio.query
     else:
-        solicitudes = SolicitudSocio.query.filter_by(estado=estado_filtro).order_by(SolicitudSocio.fecha_solicitud.desc()).all()
+        query = SolicitudSocio.query.filter_by(estado=estado_filtro)
+    
+    # Aplicar búsqueda si existe
+    if search_query:
+        search_filter = db.or_(
+            SolicitudSocio.nombre.contains(search_query),
+            SolicitudSocio.primer_apellido.contains(search_query),
+            SolicitudSocio.segundo_apellido.contains(search_query),
+            SolicitudSocio.movil.contains(search_query),
+            SolicitudSocio.movil2.contains(search_query),
+            SolicitudSocio.calle.contains(search_query),
+            SolicitudSocio.numero.contains(search_query),
+            SolicitudSocio.piso.contains(search_query),
+            SolicitudSocio.poblacion.contains(search_query),
+            db.func.strftime('%d/%m/%Y', SolicitudSocio.fecha_solicitud).contains(search_query),
+            SolicitudSocio.forma_de_pago.contains(search_query)
+        )
+        query = query.filter(search_filter)
+    
+    solicitudes = query.order_by(SolicitudSocio.fecha_solicitud.desc()).all()
     
     # Calcular nombre de usuario para cada solicitud
     solicitudes_con_usuario = []
@@ -1150,6 +1194,7 @@ def solicitudes_socios():
                          solicitudes=solicitudes,
                          solicitudes_con_usuario=solicitudes_con_usuario,
                          estado_filtro=estado_filtro,
+                         search_query=search_query,
                          total_por_confirmar=total_por_confirmar,
                          total_activas=total_activas,
                          total_rechazadas=total_rechazadas)
