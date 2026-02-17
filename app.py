@@ -157,6 +157,9 @@ def create_app():
                     if not os.path.exists(db_path):
                         print(f"[INFO] Base de datos no encontrada en {db_path}. Se creará automáticamente con db.create_all()")
             
+            # Importar todos los modelos para que SQLAlchemy los detecte
+            from models import User, Actividad, Inscripcion, SolicitudSocio, BeneficiarioSolicitud, Beneficiario, RegistroFinanciero
+            
             db.create_all()
             
             # Verificar y añadir columnas faltantes (migraciones automáticas)

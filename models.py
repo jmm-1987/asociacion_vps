@@ -203,3 +203,17 @@ class Beneficiario(db.Model):
     
     def __repr__(self):
         return f'<Beneficiario {self.nombre} {self.primer_apellido}>'
+
+class RegistroFinanciero(db.Model):
+    """Modelo para registrar ingresos y gastos de la asociación"""
+    __tablename__ = 'registros_financieros'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tipo = db.Column(db.String(20), nullable=False)  # 'ingreso' o 'gasto'
+    descripcion = db.Column(db.String(500), nullable=False)
+    fecha = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    importe = db.Column(db.Float, nullable=False)  # Importe con decimales (SQLite compatible)
+    fecha_creacion = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<RegistroFinanciero {self.tipo} {self.descripcion} {self.importe}€>'

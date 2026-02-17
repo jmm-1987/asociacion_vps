@@ -318,7 +318,7 @@ def hazte_socio():
             return render_template('auth/hazte_socio.html', datetime=dt, current_year=año_actual)
         
         # Validar forma de pago
-        if forma_de_pago not in ['bizum', 'transferencia']:
+        if forma_de_pago not in ['bizum', 'transferencia', 'efectivo']:
             flash('Forma de pago inválida.', 'error')
             from datetime import datetime as dt
             año_actual = datetime.now().year
@@ -356,6 +356,36 @@ def hazte_socio():
         
         # Normalizar movil2 (vacío si no se proporciona)
         movil2 = movil2 if movil2 else None
+        
+        # Verificar que los teléfonos no estén duplicados en el sistema
+        # Verificar móvil principal
+        movil_existente = SolicitudSocio.query.filter(
+            db.or_(
+                SolicitudSocio.movil == movil,
+                SolicitudSocio.movil2 == movil
+            )
+        ).first()
+        
+        if movil_existente:
+            flash('Ya hay un usuario registrado con este número de teléfono. Contacta con la asociación si crees que es un error.', 'error')
+            from datetime import datetime as dt
+            año_actual = datetime.now().year
+            return render_template('auth/hazte_socio.html', datetime=dt, current_year=año_actual)
+        
+        # Verificar móvil2 si está presente
+        if movil2:
+            movil2_existente = SolicitudSocio.query.filter(
+                db.or_(
+                    SolicitudSocio.movil == movil2,
+                    SolicitudSocio.movil2 == movil2
+                )
+            ).first()
+            
+            if movil2_existente:
+                flash('El segundo número de teléfono ya está registrado en el sistema. Por favor, utiliza otro número.', 'error')
+                from datetime import datetime as dt
+                año_actual = datetime.now().year
+                return render_template('auth/hazte_socio.html', datetime=dt, current_year=año_actual)
         
         # Convertir dirección a mayúsculas
         calle = quitar_acentos(calle.upper())
@@ -616,7 +646,7 @@ def confirmacion_solicitud_pdf(token):
         story.append(Paragraph("Información de Pago", heading_style))
         story.append(Spacer(1, 0.2*cm))
         
-        forma_pago_texto = "Bizum" if solicitud.forma_de_pago == 'bizum' else ("Transferencia" if solicitud.forma_de_pago == 'transferencia' else "Contado")
+        forma_pago_texto = "Bizum" if solicitud.forma_de_pago == 'bizum' else ("Transferencia" if solicitud.forma_de_pago == 'transferencia' else ("Efectivo" if solicitud.forma_de_pago == 'efectivo' else "Contado"))
         story.append(Paragraph(f"Forma de pago elegida: {forma_pago_texto}", normal_style))
         
         if solicitud.forma_de_pago == 'bizum':
@@ -625,6 +655,8 @@ def confirmacion_solicitud_pdf(token):
         elif solicitud.forma_de_pago == 'transferencia':
             story.append(Paragraph(f"Realiza la transferencia de 20€ a la cuenta: {NUMERO_CUENTA}", normal_style))
             story.append(Paragraph(f"Concepto: {nombre_usuario}", normal_style))
+        elif solicitud.forma_de_pago == 'efectivo':
+            story.append(Paragraph("Una vez completado el formulario, diríjete a la asociación para formalizar la inscripción.", normal_style))
         
         story.append(Spacer(1, 0.3*cm))
         

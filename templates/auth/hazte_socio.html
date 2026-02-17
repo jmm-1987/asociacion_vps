@@ -126,6 +126,7 @@
                                         <option value="">Selecciona una opción</option>
                                         <option value="bizum">Bizum</option>
                                         <option value="transferencia">Transferencia</option>
+                                        <option value="efectivo">Efectivo</option>
                                     </select>
                                     <small class="text-muted">Si seleccionas Bizum, asegurate de que el número de móvil coincida con el de la cuenta que lo efectúa</small>
                                     
@@ -138,6 +139,13 @@
                                         <div id="info-transferencia" style="display: none;">
                                             <strong><i class="bi bi-bank me-2"></i>Realiza la transferencia de 20€ a la cuenta:</strong>
                                             <p class="mb-0 mt-2 fs-5 fw-bold text-primary">ES90 0078 0020 0440 0001 4737</p>
+                                        </div>
+                                        <div id="info-efectivo" style="display: none;">
+                                            <strong><i class="bi bi-cash-coin me-2"></i>Pago en Efectivo:</strong>
+                                            <p class="mb-0 mt-2 fs-6 text-warning">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Una vez completado el formulario, diríjase a la asociación para formalizar la inscripción.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -619,8 +627,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const infoPago = document.getElementById('info-pago');
     const infoBizum = document.getElementById('info-bizum');
     const infoTransferencia = document.getElementById('info-transferencia');
+    const infoEfectivo = document.getElementById('info-efectivo');
     
-    if (formaPagoSelect && infoPago && infoBizum && infoTransferencia) {
+    if (formaPagoSelect && infoPago && infoBizum && infoTransferencia && infoEfectivo) {
         formaPagoSelect.addEventListener('change', function() {
             const metodo = this.value;
             
@@ -628,14 +637,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 infoPago.style.display = 'block';
                 infoBizum.style.display = 'block';
                 infoTransferencia.style.display = 'none';
+                infoEfectivo.style.display = 'none';
             } else if (metodo === 'transferencia') {
                 infoPago.style.display = 'block';
                 infoBizum.style.display = 'none';
                 infoTransferencia.style.display = 'block';
+                infoEfectivo.style.display = 'none';
+            } else if (metodo === 'efectivo') {
+                infoPago.style.display = 'block';
+                infoBizum.style.display = 'none';
+                infoTransferencia.style.display = 'none';
+                infoEfectivo.style.display = 'block';
             } else {
                 infoPago.style.display = 'none';
                 infoBizum.style.display = 'none';
                 infoTransferencia.style.display = 'none';
+                infoEfectivo.style.display = 'none';
             }
         });
     }

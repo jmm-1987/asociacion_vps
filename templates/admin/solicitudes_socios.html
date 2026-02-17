@@ -129,8 +129,10 @@
                                     <span class="badge bg-primary">Bizum</span>
                                 {% elif solicitud.forma_de_pago == 'transferencia' %}
                                     <span class="badge bg-success">Transferencia</span>
+                                {% elif solicitud.forma_de_pago == 'efectivo' %}
+                                    <span class="badge bg-warning">Efectivo</span>
                                 {% else %}
-                                    <span class="badge bg-warning">Contado</span>
+                                    <span class="badge bg-secondary">Contado</span>
                                 {% endif %}
                             </td>
                             <td>

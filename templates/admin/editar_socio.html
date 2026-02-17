@@ -14,7 +14,7 @@
                 <p class="text-white-50 mb-0 mt-2">Modificar datos del socio y beneficiarios</p>
             </div>
             <div class="card-body p-5">
-                <form method="POST" action="{{ url_for('admin.editar_socio', socio_id=socio.id) }}">
+                <form id="formEditarSocio" method="POST" action="{{ url_for('admin.editar_socio', socio_id=socio.id) }}">
                     <!-- Sección: Datos del socio -->
                     <div class="card mb-4 border-primary">
                         <div class="card-header bg-primary text-white">
@@ -47,11 +47,11 @@
                                 
                                 <div class="col-md-4 mb-3">
                                     <label for="segundo_apellido" class="form-label fw-bold">
-                                        <i class="bi bi-person me-1"></i>Segundo Apellido <span class="text-danger">*</span>
+                                        <i class="bi bi-person me-1"></i>Segundo Apellido
                                     </label>
                                     <input type="text" class="form-control" id="segundo_apellido" name="segundo_apellido" 
                                            value="{{ nombre_parts.segundo_apellido or '' }}" 
-                                           required pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" 
+                                           pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" 
                                            title="Solo letras y espacios">
                                 </div>
                             </div>
@@ -266,7 +266,7 @@
                     </div>
                     
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="button" class="btn btn-primary btn-lg" id="btnGuardarSocio" data-no-loading="true">
                             <i class="bi bi-check-lg me-2"></i>
                             Guardar Cambios
                         </button>
@@ -398,6 +398,64 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
+    // Manejo del botón de guardar - ENVÍO DIRECTO
+    const form = document.getElementById('formEditarSocio');
+    const btnGuardar = document.getElementById('btnGuardarSocio');
+    
+    if (form && btnGuardar) {
+        // El botón ahora es type="button", así que manejamos el click manualmente
+        btnGuardar.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('=== BOTÓN GUARDAR CLICKEADO ===');
+            
+            // Limpiar espacios en todos los campos
+            const todosLosCampos = form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"]');
+            todosLosCampos.forEach(function(campo) {
+                if (campo.value) {
+                    campo.value = campo.value.trim();
+                }
+            });
+            
+            // Verificar validez del formulario
+            if (form.checkValidity()) {
+                console.log('Formulario válido - ENVIANDO...');
+                // Deshabilitar el botón para evitar doble envío
+                btnGuardar.disabled = true;
+                btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+                
+                // Enviar el formulario
+                form.submit();
+            } else {
+                console.log('Formulario inválido - mostrando errores');
+                form.classList.add('was-validated');
+                
+                // Encontrar el primer campo inválido y hacer scroll hasta él
+                const primerInvalido = form.querySelector(':invalid');
+                if (primerInvalido) {
+                    primerInvalido.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    primerInvalido.focus();
+                }
+            }
+        });
+        
+        // También manejar el submit del formulario por si acaso
+        form.addEventListener('submit', function(e) {
+            console.log('=== FORMULARIO ENVIÁNDOSE ===');
+            
+            // Limpiar espacios antes de enviar
+            const todosLosCampos = form.querySelectorAll('input[type="text"], input[type="number"]');
+            todosLosCampos.forEach(function(campo) {
+                if (campo.value) {
+                    campo.value = campo.value.trim();
+                }
+            });
+            
+            console.log('Formulario enviándose normalmente...');
+        });
+    }
 });
 </script>
 {% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Registro Financiero - Asociación de Vecinos de Montealto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header text-center py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h2 class="mb-0 text-white fw-bold">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Nuevo Registro Financiero
+                </h2>
+            </div>
+            <div class="card-body p-5">
+                <form id="formNuevoRegistro" method="POST" action="{{ url_for('admin.nuevo_registro_financiero') }}">
+                    <div class="mb-3">
+                        <label for="tipo" class="form-label fw-bold">
+                            <i class="bi bi-tag me-1"></i>Tipo <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="tipo" name="tipo" required>
+                            <option value="">Selecciona un tipo</option>
+                            <option value="ingreso">Ingreso</option>
+                            <option value="gasto">Gasto</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label fw-bold">
+                            <i class="bi bi-card-text me-1"></i>Descripción <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="3" required 
+                                  placeholder="Describe el ingreso o gasto..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="fecha" class="form-label fw-bold">
+                                <i class="bi bi-calendar me-1"></i>Fecha <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="fecha" name="fecha" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="importe" class="form-label fw-bold">
+                                <i class="bi bi-currency-euro me-1"></i>Importe (€) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="importe" name="importe" 
+                                   step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="button" class="btn btn-primary btn-lg" id="btnCrearRegistro" data-no-loading="true">
+                            <i class="bi bi-check-lg me-2"></i>
+                            Crear Registro
+                        </button>
+                        <a href="{{ url_for('admin.finanzas') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Volver
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Establecer fecha actual por defecto
+    const fechaInput = document.getElementById('fecha');
+    if (fechaInput && !fechaInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        fechaInput.value = today;
+    }
+    
+    // Manejo del botón de crear registro
+    const form = document.getElementById('formNuevoRegistro');
+    const btnCrear = document.getElementById('btnCrearRegistro');
+    
+    if (form && btnCrear) {
+        btnCrear.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('=== BOTÓN CREAR REGISTRO CLICKEADO ===');
+            
+            // Verificar validez del formulario
+            if (form.checkValidity()) {
+                console.log('Formulario válido - ENVIANDO...');
+                // Deshabilitar el botón para evitar doble envío
+                btnCrear.disabled = true;
+                btnCrear.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creando...';
+                
+                // Enviar el formulario
+                form.submit();
+            } else {
+                console.log('Formulario inválido - mostrando errores');
+                form.classList.add('was-validated');
+                
+                // Encontrar el primer campo inválido y hacer scroll hasta él
+                const primerInvalido = form.querySelector(':invalid');
+                if (primerInvalido) {
+                    primerInvalido.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    primerInvalido.focus();
+                }
+            }
+        });
+        
+        // También manejar el submit del formulario por si acaso
+        form.addEventListener('submit', function(e) {
+            console.log('=== FORMULARIO ENVIÁNDOSE ===');
+            // No prevenir el envío - dejar que el formulario se envíe normalmente
+        });
+    }
+});
+</script>
+{% endblock %}

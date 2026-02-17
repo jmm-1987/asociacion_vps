@@ -46,6 +46,8 @@
                             <span class="badge bg-primary">Bizum</span>
                         {% elif solicitud.forma_de_pago == 'transferencia' %}
                             <span class="badge bg-success">Transferencia</span>
+                        {% elif solicitud.forma_de_pago == 'efectivo' %}
+                            <span class="badge bg-warning">Efectivo</span>
                         {% else %}
                             <span class="badge bg-secondary">Contado</span>
                         {% endif %}
@@ -67,6 +69,13 @@
                     <p class="mb-0">
                         <strong>Concepto:</strong>
                         <span class="fs-5 fw-bold text-primary ms-2">{{ nombre_usuario }}</span>
+                    </p>
+                    {% elif solicitud.forma_de_pago == 'efectivo' %}
+                    <p class="mb-0">
+                        <strong><i class="bi bi-info-circle me-2"></i>Pago en Efectivo:</strong>
+                        <span class="d-block mt-2 text-warning">
+                            Debe dirigirse a la asociación para efectuar el pago y completar la inscripción.
+                        </span>
                     </p>
                     {% elif solicitud.forma_de_pago == 'contado' %}
                     <p class="mb-0">
@@ -174,6 +183,8 @@
                                 <span class="badge bg-primary">Bizum</span>
                             {% elif solicitud.forma_de_pago == 'transferencia' %}
                                 <span class="badge bg-success">Transferencia</span>
+                            {% elif solicitud.forma_de_pago == 'efectivo' %}
+                                <span class="badge bg-warning">Efectivo</span>
                             {% else %}
                                 <span class="badge bg-secondary">Contado</span>
                             {% endif %}

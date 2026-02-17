@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from flask_login import login_required, current_user
-from models import User, Actividad, Inscripcion, SolicitudSocio, BeneficiarioSolicitud, Beneficiario, db
+from models import User, Actividad, Inscripcion, SolicitudSocio, BeneficiarioSolicitud, Beneficiario, RegistroFinanciero, db
 from datetime import datetime, timedelta
 from functools import wraps
 import secrets
@@ -300,7 +300,7 @@ def nuevo_socio():
             return render_template('admin/nuevo_socio.html', datetime=dt)
         
         # Validar forma de pago
-        if forma_de_pago not in ['bizum', 'transferencia']:
+        if forma_de_pago not in ['bizum', 'transferencia', 'efectivo']:
             flash('Forma de pago inválida.', 'error')
             from datetime import datetime as dt
             return render_template('admin/nuevo_socio.html', datetime=dt)
@@ -381,8 +381,8 @@ def editar_socio(socio_id):
         piso = request.form.get('piso', '').strip()
         poblacion = request.form.get('poblacion', '').strip()
         
-        # Validaciones básicas
-        if not all([nombre, primer_apellido, segundo_apellido, nombre_usuario, calle, numero, poblacion, rol, fecha_validez_str]):
+        # Validaciones básicas (segundo_apellido es opcional)
+        if not all([nombre, primer_apellido, nombre_usuario, calle, numero, poblacion, rol, fecha_validez_str]):
             flash('Todos los campos obligatorios deben estar completos.', 'error')
             from datetime import datetime as dt
             # Separar nombre completo en partes
@@ -562,6 +562,9 @@ def editar_socio(socio_id):
             socio.set_password(password)
             socio.password_plain = password  # Guardar en texto plano para mostrar a admin
         
+        # Asegurar que el socio esté en la sesión y marcado como modificado
+        db.session.add(socio)
+        
         # Procesar beneficiarios
         # Obtener todos los índices de beneficiarios del formulario (pueden no ser secuenciales)
         beneficiarios_indices = set()
@@ -608,32 +611,33 @@ def editar_socio(socio_id):
             except ValueError:
                 continue
         
-        # Ahora sí, eliminar beneficiarios existentes y crear los nuevos
-        for beneficiario in beneficiarios:
-            db.session.delete(beneficiario)
-        
-        # Crear los beneficiarios en la base de datos
-        for index, ben_data in enumerate(nuevos_beneficiarios, start=1):
-            # Generar número de beneficiario
-            numero_beneficiario = f"{socio.numero_socio}-{index}" if socio.numero_socio else None
-            
-            nuevo_beneficiario = Beneficiario(
-                socio_id=socio.id,
-                nombre=ben_data['nombre'],
-                primer_apellido=ben_data['primer_apellido'],
-                segundo_apellido=ben_data['segundo_apellido'],
-                ano_nacimiento=ben_data['ano_nacimiento'],
-                fecha_validez=socio.fecha_validez,
-                numero_beneficiario=numero_beneficiario
-            )
-            db.session.add(nuevo_beneficiario)
-        
         try:
-            # Asegurarse de que todos los cambios estén en la sesión
-            db.session.add(socio)  # Asegurar que el socio esté en la sesión
+            # Eliminar beneficiarios existentes
+            for beneficiario in beneficiarios:
+                db.session.delete(beneficiario)
             
-            # Hacer flush para validar antes del commit
+            # Hacer flush para aplicar las eliminaciones antes de crear nuevos
             db.session.flush()
+            
+            # Crear los beneficiarios en la base de datos
+            for index, ben_data in enumerate(nuevos_beneficiarios, start=1):
+                # Generar número de beneficiario
+                numero_beneficiario = f"{socio.numero_socio}-{index}" if socio.numero_socio else None
+                
+                nuevo_beneficiario = Beneficiario(
+                    socio_id=socio.id,
+                    nombre=ben_data['nombre'],
+                    primer_apellido=ben_data['primer_apellido'],
+                    segundo_apellido=ben_data['segundo_apellido'],
+                    ano_nacimiento=ben_data['ano_nacimiento'],
+                    fecha_validez=socio.fecha_validez,
+                    numero_beneficiario=numero_beneficiario
+                )
+                db.session.add(nuevo_beneficiario)
+            
+            # Verificar que el socio tenga cambios pendientes
+            if db.session.is_modified(socio):
+                print(f"Socio modificado: {socio.nombre}")
             
             # Commit de todos los cambios
             db.session.commit()
@@ -643,12 +647,16 @@ def editar_socio(socio_id):
             return redirect(url_for('admin.gestion_socios'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al actualizar el socio: {str(e)}. Por favor, inténtalo de nuevo.', 'error')
+            # Log del error completo para debugging
             import traceback
-            traceback.print_exc()
+            error_trace = traceback.format_exc()
+            print(f"Error al actualizar socio: {error_trace}")
+            flash(f'Error al actualizar el socio: {str(e)}. Por favor, inténtalo de nuevo.', 'error')
             from datetime import datetime as dt
             # Recargar beneficiarios originales en caso de error
             beneficiarios_originales = Beneficiario.query.filter_by(socio_id=socio.id).order_by(Beneficiario.id).all()
+            # Recargar el socio desde la BD para evitar inconsistencias
+            db.session.refresh(socio)
             partes_nombre = socio.nombre.split(' ', 2)
             nombre_parts = {
                 'nombre': partes_nombre[0] if len(partes_nombre) > 0 else '',
@@ -1449,6 +1457,12 @@ def editar_solicitud(solicitud_id):
             
             # Normalizar movil2 (None si está vacío)
             nuevo_movil2 = nuevo_movil2 if nuevo_movil2 else None
+            
+            # Validar forma de pago
+            if nueva_forma_pago not in ['bizum', 'transferencia', 'efectivo']:
+                flash('Forma de pago inválida.', 'error')
+                beneficiarios = BeneficiarioSolicitud.query.filter_by(solicitud_id=solicitud_id).order_by(BeneficiarioSolicitud.id).all()
+                return render_template('admin/editar_solicitud.html', solicitud=solicitud, beneficiarios=beneficiarios, datetime=dt)
             
             # Actualizar datos del socio directamente en el objeto
             solicitud.nombre = nuevo_nombre
@@ -2444,3 +2458,271 @@ def restaurar_base_datos():
         import traceback
         traceback.print_exc()
         return render_template('admin/restaurar_base_datos.html')
+
+@admin_bp.route('/finanzas')
+@login_required
+@directiva_required
+def finanzas():
+    """Vista principal de ingresos y gastos"""
+    # Obtener parámetros de filtro
+    mostrar_socios = request.args.get('mostrar_socios', 'false') == 'true'
+    fecha_inicio_str = request.args.get('fecha_inicio', '').strip()
+    fecha_fin_str = request.args.get('fecha_fin', '').strip()
+    
+    # Valores por defecto: 1 de enero del año en curso hasta hoy
+    año_actual = datetime.now().year
+    fecha_inicio_default = datetime(año_actual, 1, 1).date()
+    fecha_fin_default = datetime.now().date()
+    
+    # Procesar fechas de filtro
+    fecha_inicio = fecha_inicio_default
+    fecha_fin = fecha_fin_default
+    
+    if fecha_inicio_str:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
+        except ValueError:
+            fecha_inicio = fecha_inicio_default
+    
+    if fecha_fin_str:
+        try:
+            fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
+        except ValueError:
+            fecha_fin = fecha_fin_default
+    
+    # Obtener registros financieros con filtro de fecha
+    query_registros = RegistroFinanciero.query
+    
+    if fecha_inicio:
+        query_registros = query_registros.filter(RegistroFinanciero.fecha >= fecha_inicio)
+    if fecha_fin:
+        query_registros = query_registros.filter(RegistroFinanciero.fecha <= fecha_fin)
+    
+    registros = query_registros.order_by(RegistroFinanciero.fecha.desc()).all()
+    
+    # Calcular ingresos de socios agrupados por tipo de pago
+    # Obtener solicitudes confirmadas (estado='activa') con filtro de fecha
+    query_solicitudes = SolicitudSocio.query.filter_by(estado='activa')
+    
+    # Filtrar por fecha de confirmación
+    if fecha_inicio:
+        query_solicitudes = query_solicitudes.filter(
+            SolicitudSocio.fecha_confirmacion >= datetime.combine(fecha_inicio, datetime.min.time())
+        )
+    if fecha_fin:
+        fecha_fin_dt = datetime.combine(fecha_fin, datetime.max.time())
+        query_solicitudes = query_solicitudes.filter(
+            SolicitudSocio.fecha_confirmacion <= fecha_fin_dt
+        )
+    
+    solicitudes_confirmadas = query_solicitudes.all()
+    
+    # Agrupar por forma de pago
+    ingresos_por_tipo = {
+        'bizum': {'cantidad': 0, 'total': 0.00},
+        'transferencia': {'cantidad': 0, 'total': 0.00},
+        'efectivo': {'cantidad': 0, 'total': 0.00},
+        'contado': {'cantidad': 0, 'total': 0.00}  # Por si hay solicitudes antiguas con 'contado'
+    }
+    
+    for solicitud in solicitudes_confirmadas:
+        forma_pago = solicitud.forma_de_pago.lower() if solicitud.forma_de_pago else 'efectivo'
+        if forma_pago not in ingresos_por_tipo:
+            forma_pago = 'efectivo'  # Por defecto si hay algún valor inesperado
+        
+        ingresos_por_tipo[forma_pago]['cantidad'] += 1
+        ingresos_por_tipo[forma_pago]['total'] += 20.00
+    
+    # Crear registros resumen de ingresos de socios
+    ingresos_socios_resumen = []
+    total_ingresos_socios = 0.00
+    
+    for forma_pago, datos in ingresos_por_tipo.items():
+        if datos['cantidad'] > 0:
+            # Nombre legible del tipo de pago
+            nombre_tipo = {
+                'bizum': 'Bizum',
+                'transferencia': 'Transferencia',
+                'efectivo': 'Efectivo',
+                'contado': 'Contado'
+            }.get(forma_pago, forma_pago.capitalize())
+            
+            # Usar fecha de referencia basada en el filtro o fecha actual
+            fecha_referencia = fecha_fin if fecha_fin else (fecha_inicio if fecha_inicio else datetime.now().date())
+            
+            ingresos_socios_resumen.append({
+                'tipo': 'ingreso',
+                'descripcion': f'{datos["cantidad"]} socio(s) - Pago por {nombre_tipo}',
+                'fecha': fecha_referencia,  # Fecha de referencia para ordenamiento
+                'importe': datos['total'],
+                'es_socio': True,
+                'forma_pago': forma_pago,
+                'cantidad': datos['cantidad']
+            })
+            total_ingresos_socios += datos['total']
+    
+    # Combinar registros manuales con ingresos de socios si está marcado
+    registros_combinados = []
+    
+    # Añadir ingresos de socios primero si están habilitados
+    if mostrar_socios:
+        registros_combinados.extend(ingresos_socios_resumen)
+    
+    # Añadir registros manuales
+    for registro in registros:
+        registros_combinados.append({
+            'tipo': registro.tipo,
+            'descripcion': registro.descripcion,
+            'fecha': registro.fecha,
+            'importe': float(registro.importe),
+            'es_socio': False,
+            'id': registro.id
+        })
+    
+    # Ordenar por fecha descendente
+    registros_combinados.sort(key=lambda x: x['fecha'], reverse=True)
+    
+    # Calcular totales
+    total_ingresos = sum(r['importe'] for r in registros_combinados if r['tipo'] == 'ingreso')
+    total_gastos = sum(r['importe'] for r in registros_combinados if r['tipo'] == 'gasto')
+    balance = total_ingresos - total_gastos
+    
+    return render_template('admin/finanzas.html',
+                         registros=registros_combinados,
+                         mostrar_socios=mostrar_socios,
+                         total_ingresos=total_ingresos,
+                         total_gastos=total_gastos,
+                         balance=balance,
+                         total_ingresos_socios=total_ingresos_socios,
+                         ingresos_por_tipo=ingresos_por_tipo,
+                         fecha_inicio=fecha_inicio_str if fecha_inicio_str else fecha_inicio.strftime('%Y-%m-%d'),
+                         fecha_fin=fecha_fin_str if fecha_fin_str else fecha_fin.strftime('%Y-%m-%d'))
+
+@admin_bp.route('/finanzas/nuevo', methods=['GET', 'POST'])
+@login_required
+@directiva_required
+def nuevo_registro_financiero():
+    """Crear un nuevo registro financiero"""
+    if request.method == 'POST':
+        tipo = request.form.get('tipo', '').strip()
+        descripcion = request.form.get('descripcion', '').strip()
+        fecha_str = request.form.get('fecha', '').strip()
+        importe_str = request.form.get('importe', '').strip()
+        
+        # Validaciones
+        from datetime import datetime as dt
+        if not all([tipo, descripcion, fecha_str, importe_str]):
+            flash('Todos los campos son obligatorios.', 'error')
+            return render_template('admin/nuevo_registro_financiero.html', datetime=dt)
+        
+        if tipo not in ['ingreso', 'gasto']:
+            flash('Tipo inválido. Debe ser "ingreso" o "gasto".', 'error')
+            return render_template('admin/nuevo_registro_financiero.html', datetime=dt)
+        
+        try:
+            fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+            importe = float(importe_str)
+            if importe <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
+            flash('Fecha o importe inválidos.', 'error')
+            return render_template('admin/nuevo_registro_financiero.html', datetime=dt)
+        
+        # Crear registro
+        nuevo_registro = RegistroFinanciero(
+            tipo=tipo,
+            descripcion=descripcion,
+            fecha=fecha,
+            importe=importe
+        )
+        
+        try:
+            # Verificar que la tabla existe, si no, crearla
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            if 'registros_financieros' not in inspector.get_table_names():
+                print("[INFO] Tabla registros_financieros no existe, creándola...")
+                RegistroFinanciero.__table__.create(db.engine, checkfirst=True)
+                print("[OK] Tabla creada")
+            
+            db.session.add(nuevo_registro)
+            db.session.flush()  # Verificar que no hay errores antes del commit
+            db.session.commit()
+            flash(f'Registro {tipo} creado exitosamente.', 'success')
+            return redirect(url_for('admin.finanzas'))
+        except Exception as e:
+            db.session.rollback()
+            error_msg = str(e)
+            print(f"[ERROR] Error al crear registro financiero: {error_msg}")
+            import traceback
+            traceback.print_exc()
+            flash(f'Error al crear el registro: {error_msg}. Por favor, verifica que la tabla existe en la base de datos.', 'error')
+            from datetime import datetime as dt
+            return render_template('admin/nuevo_registro_financiero.html', datetime=dt)
+    
+    return render_template('admin/nuevo_registro_financiero.html')
+
+@admin_bp.route('/finanzas/<int:registro_id>/editar', methods=['GET', 'POST'])
+@login_required
+@directiva_required
+def editar_registro_financiero(registro_id):
+    """Editar un registro financiero existente"""
+    registro = RegistroFinanciero.query.get_or_404(registro_id)
+    
+    if request.method == 'POST':
+        tipo = request.form.get('tipo', '').strip()
+        descripcion = request.form.get('descripcion', '').strip()
+        fecha_str = request.form.get('fecha', '').strip()
+        importe_str = request.form.get('importe', '').strip()
+        
+        # Validaciones
+        if not all([tipo, descripcion, fecha_str, importe_str]):
+            flash('Todos los campos son obligatorios.', 'error')
+            return render_template('admin/editar_registro_financiero.html', registro=registro)
+        
+        if tipo not in ['ingreso', 'gasto']:
+            flash('Tipo inválido. Debe ser "ingreso" o "gasto".', 'error')
+            return render_template('admin/editar_registro_financiero.html', registro=registro)
+        
+        try:
+            fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+            importe = float(importe_str)
+            if importe <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
+            flash('Fecha o importe inválidos.', 'error')
+            return render_template('admin/editar_registro_financiero.html', registro=registro)
+        
+        # Actualizar registro
+        registro.tipo = tipo
+        registro.descripcion = descripcion
+        registro.fecha = fecha
+        registro.importe = importe
+        
+        try:
+            db.session.commit()
+            flash('Registro actualizado exitosamente.', 'success')
+            return redirect(url_for('admin.finanzas'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar el registro: {str(e)}', 'error')
+            return render_template('admin/editar_registro_financiero.html', registro=registro)
+    
+    return render_template('admin/editar_registro_financiero.html', registro=registro)
+
+@admin_bp.route('/finanzas/<int:registro_id>/eliminar', methods=['POST'])
+@login_required
+@directiva_required
+def eliminar_registro_financiero(registro_id):
+    """Eliminar un registro financiero"""
+    registro = RegistroFinanciero.query.get_or_404(registro_id)
+    
+    try:
+        db.session.delete(registro)
+        db.session.commit()
+        flash('Registro eliminado exitosamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar el registro: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.finanzas'))
