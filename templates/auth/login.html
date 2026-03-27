@@ -78,7 +78,24 @@
         </h2>
     </div>
     <div class="col-md-4 mb-4">
-        <a href="#" class="galeria-link text-decoration-none">
+        <a href="{{ url_for('auth.galeria', seccion='nuevo-parque') }}" class="galeria-link text-decoration-none">
+            <div class="galeria-card galeria-card-0">
+                <div class="galeria-imagen">
+                    <img src="{{ url_for('static', filename='galerias/inauguracion-parque/1.jpeg') }}" 
+                         alt="Nuevo Parque" 
+                         class="img-fluid">
+                </div>
+                <div class="galeria-overlay">
+                    <h4 class="text-white fw-bold mb-0">
+                        <i class="bi bi-tree-fill me-2"></i>
+                        Nuevo Parque
+                    </h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <a href="{{ url_for('auth.galeria', seccion='navidad') }}" class="galeria-link text-decoration-none">
             <div class="galeria-card galeria-card-1">
                 <div class="galeria-imagen">
                     <img src="{{ url_for('static', filename='navidad.png') }}" 
@@ -95,7 +112,7 @@
         </a>
     </div>
     <div class="col-md-4 mb-4">
-        <a href="#" class="galeria-link text-decoration-none">
+        <a href="{{ url_for('auth.galeria', seccion='ferias-y-fiestas') }}" class="galeria-link text-decoration-none">
             <div class="galeria-card galeria-card-2">
                 <div class="galeria-imagen">
                     <img src="{{ url_for('static', filename='fiestas.png') }}" 
@@ -112,7 +129,7 @@
         </a>
     </div>
     <div class="col-md-4 mb-4">
-        <a href="#" class="galeria-link text-decoration-none">
+        <a href="{{ url_for('auth.galeria', seccion='halloween') }}" class="galeria-link text-decoration-none">
             <div class="galeria-card galeria-card-3">
                 <div class="galeria-imagen">
                     <img src="{{ url_for('static', filename='hallowen.png') }}" 
@@ -123,6 +140,57 @@
                     <h4 class="text-white fw-bold mb-0">
                         <i class="bi bi-ghost me-2"></i>
                         Halloween
+                    </h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <a href="{{ url_for('auth.galeria', seccion='cabalgata') }}" class="galeria-link text-decoration-none">
+            <div class="galeria-card galeria-card-4">
+                <div class="galeria-imagen">
+                    <img src="{{ url_for('static', filename='galerias/cabalgata/IMG_2604.jpg') }}" 
+                         alt="Cabalgata" 
+                         class="img-fluid">
+                </div>
+                <div class="galeria-overlay">
+                    <h4 class="text-white fw-bold mb-0">
+                        <i class="bi bi-truck me-2"></i>
+                        Cabalgata
+                    </h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <a href="{{ url_for('auth.galeria', seccion='estrellas') }}" class="galeria-link text-decoration-none">
+            <div class="galeria-card galeria-card-5">
+                <div class="galeria-imagen">
+                    <img src="{{ url_for('static', filename='galerias/estrellas/IMG_2269.jpg') }}" 
+                         alt="Estrellas" 
+                         class="img-fluid">
+                </div>
+                <div class="galeria-overlay">
+                    <h4 class="text-white fw-bold mb-0">
+                        <i class="bi bi-stars me-2"></i>
+                        Estrellas
+                    </h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <a href="{{ url_for('auth.galeria', seccion='concetracionmotera') }}" class="galeria-link text-decoration-none">
+            <div class="galeria-card galeria-card-6">
+                <div class="galeria-imagen">
+                    <img src="{{ url_for('static', filename='galerias/concetracionmotera/portada.png') }}" 
+                         alt="Concentración Motera" 
+                         class="img-fluid">
+                </div>
+                <div class="galeria-overlay">
+                    <h4 class="text-white fw-bold mb-0">
+                        <i class="bi bi-flag me-2"></i>
+                        Concentración Motera
                     </h4>
                 </div>
             </div>

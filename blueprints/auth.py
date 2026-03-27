@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response, current_app, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from models import User, SolicitudSocio, BeneficiarioSolicitud, db
 from datetime import datetime
@@ -43,6 +43,94 @@ def quitar_acentos(texto):
 def login():
     """Página principal/portada sin formulario de login"""
     return render_template('auth/login.html')
+
+
+@auth_bp.route('/galeria/<seccion>')
+def galeria(seccion):
+    """Galerías de fotos de las fiestas (Nuestras Fiestas)"""
+    # Configuración de las secciones disponibles
+    secciones_config = {
+        'nuevo-parque': {
+            'titulo': 'Nuevo Parque',
+            'icono': 'bi bi-tree-fill',
+            'carpetas': ['inauguracion-parque'],
+        },
+        # Alias para que también funcione si se usa la carpeta como slug en la URL
+        'inauguracion-parque': {
+            'titulo': 'Nuevo Parque',
+            'icono': 'bi bi-tree-fill',
+            'carpetas': ['inauguracion-parque'],
+        },
+        'navidad': {
+            'titulo': 'El Barrio de la Navidad',
+            'icono': 'bi bi-snow',
+            'carpetas': ['navidad'],
+        },
+        'ferias-y-fiestas': {
+            'titulo': 'Ferias y Fiestas',
+            'icono': 'bi bi-calendar-event',
+            # Ferias y Fiestas incluirá también las fotos de Semana Cultural
+            'carpetas': ['ferias-y-fiestas', 'semanacultural'],
+        },
+        'halloween': {
+            'titulo': 'Halloween',
+            'icono': 'bi bi-ghost',
+            'carpetas': ['halloween'],
+        },
+        'cabalgata': {
+            'titulo': 'Cabalgata',
+            'icono': 'bi bi-truck',
+            'carpetas': ['cabalgata'],
+        },
+        'estrellas': {
+            'titulo': 'Estrellas',
+            'icono': 'bi bi-stars',
+            'carpetas': ['estrellas'],
+        },
+        'concetracionmotera': {
+            'titulo': 'Concentración Motera',
+            'icono': 'bi bi-flag',
+            'carpetas': ['concetracionmotera'],
+            'tipo': 'video',
+        },
+    }
+    
+    config = secciones_config.get(seccion)
+    if not config:
+        abort(404)
+    
+    imagenes = []
+    video_file = None
+    
+    # Cada sección puede usar una o varias carpetas físicas dentro de static/galerias
+    carpetas = config.get('carpetas', [seccion])
+    
+    video_extensiones = ('.mp4', '.webm', '.ogg', '.mov', '.m4v')
+    imagen_extensiones = ('.jpg', '.jpeg', '.png', '.gif', '.webp')
+    
+    for carpeta in carpetas:
+        galeria_dir = os.path.join(current_app.static_folder, 'galerias', carpeta)
+        if os.path.isdir(galeria_dir):
+            for nombre in os.listdir(galeria_dir):
+                ruta_completa = os.path.join(galeria_dir, nombre)
+                if not os.path.isfile(ruta_completa):
+                    continue
+                
+                nombre_lower = nombre.lower()
+                if nombre_lower.endswith(imagen_extensiones):
+                    imagenes.append(f'galerias/{carpeta}/{nombre}')
+                elif nombre_lower.endswith(video_extensiones) and video_file is None:
+                    video_file = f'galerias/{carpeta}/{nombre}'
+    
+    imagenes.sort()
+    
+    return render_template(
+        'auth/galeria.html',
+        seccion=seccion,
+        config=config,
+        imagenes=imagenes,
+        video=video_file,
+    )
 
 @auth_bp.route('/acceso-socios', methods=['GET', 'POST'])
 def acceso_socios():

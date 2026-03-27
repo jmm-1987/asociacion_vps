@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}{{ config.titulo }} - Nuestras Fiestas{% endblock %}
+
+{% block content %}
+<div class="container mt-4 pt-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    <i class="{{ config.icono }} me-2 text-primary"></i>
+                    {{ config.titulo }}
+                </h2>
+                <p class="text-muted mb-0">Galería de fotos - Nuestras Fiestas</p>
+            </div>
+            <div>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left-circle me-1"></i>
+                    Volver a la portada
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if config.tipo == 'video' and video %}
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <button type="button"
+                        class="btn galeria-video-thumb p-0 border-0 rounded-0 w-100">
+                    {# Usamos la primera imagen encontrada como poster si existe #}
+                    {% if imagenes %}
+                        <img src="{{ url_for('static', filename=imagenes[0]) }}"
+                             class="img-fluid w-100 d-block"
+                             alt="{{ config.titulo }} - Vídeo">
+                    {% else %}
+                        <div class="ratio ratio-16x9 bg-dark d-flex align-items-center justify-content-center">
+                            <i class="bi bi-play-circle text-white display-3"></i>
+                        </div>
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal con vídeo -->
+        <div class="modal fade" id="galeriaVideoModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title text-white">
+                            <i class="{{ config.icono }} me-2"></i>{{ config.titulo }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <video id="galeriaVideo"
+                               class="w-100"
+                               controls
+                               playsinline>
+                            <source src="{{ url_for('static', filename=video) }}" type="video/mp4">
+                            Tu navegador no soporta la reproducción de vídeo.
+                        </video>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-between">
+                        <small class="text-white-50">Pulsa en reproducir o usa la barra espaciadora para controlar el vídeo.</small>
+                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-1"></i>Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif imagenes %}
+        <div class="row g-0 galeria-grid">
+            {% for imagen in imagenes %}
+                <div class="col-6 col-md-4 col-lg-3">
+                    <button type="button"
+                            class="btn galeria-thumb p-0 border-0 rounded-0 w-100"
+                            data-index="{{ loop.index0 }}">
+                        <img src="{{ url_for('static', filename=imagen) }}"
+                             class="img-fluid w-100 d-block"
+                             alt="{{ config.titulo }} - Foto {{ loop.index }}">
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Modal con slider -->
+        <div class="modal fade" id="galeriaModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title text-white">
+                            <i class="{{ config.icono }} me-2"></i>{{ config.titulo }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="galeriaCarousel" class="carousel slide" data-bs-ride="false">
+                            <div class="carousel-inner">
+                                {% for imagen in imagenes %}
+                                    <div class="carousel-item{% if loop.first %} active{% endif %}">
+                                        <img src="{{ url_for('static', filename=imagen) }}"
+                                             class="d-block w-100 img-fluid"
+                                             alt="{{ config.titulo }} - Foto {{ loop.index }}">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#galeriaCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Anterior</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#galeriaCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Siguiente</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-between">
+                        <small class="text-white-50">Usa las flechas o las teclas de dirección para moverte por las fotos.</small>
+                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-1"></i>Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <div>
+                        Próximamente subiremos las fotos de esta sección.
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Galerías de imágenes (con carrusel)
+    var modalEl = document.getElementById('galeriaModal');
+    if (modalEl) {
+        var modal = new bootstrap.Modal(modalEl);
+        var carouselEl = document.getElementById('galeriaCarousel');
+        var carousel = new bootstrap.Carousel(carouselEl, {
+            interval: false,
+            ride: false,
+            wrap: true
+        });
+
+        document.querySelectorAll('.galeria-thumb').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var index = parseInt(this.getAttribute('data-index'), 10) || 0;
+                carousel.to(index);
+                modal.show();
+            });
+        });
+    }
+
+    // Galería de vídeo (concentración motera)
+    var videoModalEl = document.getElementById('galeriaVideoModal');
+    if (videoModalEl) {
+        var videoModal = new bootstrap.Modal(videoModalEl);
+        var videoEl = document.getElementById('galeriaVideo');
+
+        var openVideo = function () {
+            if (videoEl) {
+                videoEl.currentTime = 0;
+                videoEl.pause();
+            }
+            videoModal.show();
+        };
+
+        document.querySelectorAll('.galeria-video-thumb').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                openVideo();
+            });
+        });
+
+        videoModalEl.addEventListener('hidden.bs.modal', function () {
+            if (videoEl) {
+                videoEl.pause();
+            }
+        });
+    }
+});
+</script>
+<style>
+    /* Quitar huecos y bordes en las galerías */
+    .galeria-grid {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .galeria-grid .col-6,
+    .galeria-grid .col-md-4,
+    .galeria-grid .col-lg-3 {
+        padding: 0;
+    }
+    .galeria-thumb,
+    .galeria-video-thumb {
+        background-color: transparent;
+    }
+    .galeria-thumb img,
+    .galeria-video-thumb img {
+        border-radius: 0;
+    }
+</style>
+{% endblock %}
+
