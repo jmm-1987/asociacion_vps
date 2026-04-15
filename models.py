@@ -73,6 +73,7 @@ class Actividad(db.Model):
     aforo_maximo = db.Column(db.Integer, nullable=False)
     edad_minima = db.Column(db.Integer, nullable=True)  # Edad mínima requerida (None = sin restricción)
     edad_maxima = db.Column(db.Integer, nullable=True)  # Edad máxima permitida (None = sin restricción)
+    bloqueada_inscripcion = db.Column(db.Boolean, nullable=False, default=False)  # Bloqueo manual de inscripciones
     fecha_creacion = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
     # Relaciones

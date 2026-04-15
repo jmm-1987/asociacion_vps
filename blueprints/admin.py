@@ -869,6 +869,26 @@ def eliminar_actividad(actividad_id):
         traceback.print_exc()
         return redirect(url_for('admin.gestion_actividades'))
 
+
+@admin_bp.route('/actividades/<int:actividad_id>/bloquear-inscripcion', methods=['POST'])
+@login_required
+@directiva_required
+def bloquear_inscripcion_actividad(actividad_id):
+    actividad = Actividad.query.get_or_404(actividad_id)
+    actividad.bloqueada_inscripcion = not bool(actividad.bloqueada_inscripcion)
+
+    try:
+        db.session.commit()
+        if actividad.bloqueada_inscripcion:
+            flash(f'Inscripciones bloqueadas para "{actividad.nombre}".', 'warning')
+        else:
+            flash(f'Inscripciones reabiertas para "{actividad.nombre}".', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al actualizar el bloqueo de inscripciones: {str(e)}', 'error')
+
+    return redirect(url_for('admin.gestion_actividades'))
+
 @admin_bp.route('/actividades/pdf')
 @login_required
 @directiva_required

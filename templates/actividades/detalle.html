@@ -146,6 +146,11 @@
                                 </form>
                             {% endif %}
                         {% endif %}
+                    {% elif actividad.bloqueada_inscripcion %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-lock-fill me-2"></i>
+                            Las inscripciones están bloqueadas por la directiva.
+                        </div>
                     {% elif actividad.tiene_plazas_disponibles() and actividad.fecha > ahora %}
                         {% if current_user.is_socio() %}
                             {% set socio_puede = True %}

@@ -110,7 +110,9 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if actividad.fecha > ahora %}
+                                    {% if actividad.bloqueada_inscripcion %}
+                                        <span class="badge bg-warning text-dark">Inscripción bloqueada</span>
+                                    {% elif actividad.fecha > ahora %}
                                         <span class="badge bg-success">Próxima</span>
                                     {% else %}
                                         <span class="badge bg-secondary">Pasada</span>
@@ -130,6 +132,13 @@
                                            class="btn btn-outline-info btn-sm" title="Ver Inscritos">
                                             <i class="bi bi-people"></i>
                                         </a>
+                                        <form method="POST" action="{{ url_for('admin.bloquear_inscripcion_actividad', actividad_id=actividad.id) }}" style="display:inline;">
+                                            <button type="submit"
+                                                    class="btn btn-sm {% if actividad.bloqueada_inscripcion %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                                                    title="{% if actividad.bloqueada_inscripcion %}Desbloquear inscripciones{% else %}Bloquear inscripciones{% endif %}">
+                                                <i class="bi {% if actividad.bloqueada_inscripcion %}bi-unlock-fill{% else %}bi-lock-fill{% endif %}"></i>
+                                            </button>
+                                        </form>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                 title="Eliminar"
                                                 onclick="confirmarEliminar({{ actividad.id }}, '{{ actividad.nombre }}')">

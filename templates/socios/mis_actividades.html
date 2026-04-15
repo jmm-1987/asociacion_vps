@@ -68,20 +68,22 @@
                         {% endif %}
                     </div>
                     <div class="card-footer">
-                        {# Mostrar quién está inscrito #}
+                        {# Mostrar claramente quiénes están inscritos en esta actividad #}
                         {% if inscripciones_por_actividad[actividad.id] %}
                             <div class="mb-2">
-                                <small class="text-success">
-                                    <i class="bi bi-check-circle me-1"></i>
-                                    Inscrito{% if inscripciones_por_actividad[actividad.id]|length > 1 %}s{% endif %}:
-                                    {% for insc in inscripciones_por_actividad[actividad.id] %}
-                                        {% if insc.beneficiario %}
-                                            {{ insc.beneficiario.nombre }}{% if not loop.last %}, {% endif %}
-                                        {% else %}
-                                            Tú{% if not loop.last %}, {% endif %}
-                                        {% endif %}
-                                    {% endfor %}
+                                <small class="text-success fw-semibold d-block mb-1">
+                                    <i class="bi bi-people-fill me-1"></i>
+                                    Integrantes inscritos:
                                 </small>
+                                {% for insc in inscripciones_por_actividad[actividad.id] %}
+                                    <span class="badge bg-success-subtle text-success border border-success me-1 mb-1">
+                                        {% if insc.beneficiario %}
+                                            {{ insc.beneficiario.nombre }} {{ insc.beneficiario.primer_apellido }}
+                                        {% else %}
+                                            {{ current_user.nombre }} (Titular)
+                                        {% endif %}
+                                    </span>
+                                {% endfor %}
                             </div>
                         {% endif %}
                         

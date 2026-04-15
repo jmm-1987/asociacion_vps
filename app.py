@@ -191,6 +191,26 @@ def create_app():
                                     traceback.print_exc()
                     else:
                         print("[INFO] La tabla 'solicitudes_socio' no existe aún, se creará con db.create_all()")
+
+                    # Verificar columna de bloqueo de inscripciones en actividades
+                    if 'actividades' in inspector.get_table_names():
+                        columnas_actividades = [col['name'] for col in inspector.get_columns('actividades')]
+                        if 'bloqueada_inscripcion' not in columnas_actividades:
+                            try:
+                                with db.engine.connect() as conn:
+                                    conn.execute(text('ALTER TABLE actividades ADD COLUMN bloqueada_inscripcion BOOLEAN DEFAULT 0 NOT NULL'))
+                                    conn.commit()
+                                print("[INFO] Columna 'bloqueada_inscripcion' añadida automáticamente a 'actividades'")
+                            except Exception as e:
+                                error_msg = str(e).lower()
+                                if "duplicate column name" in error_msg or "already exists" in error_msg:
+                                    print("[INFO] La columna 'bloqueada_inscripcion' ya existe en 'actividades'")
+                                else:
+                                    print(f"[WARNING] No se pudo añadir la columna 'bloqueada_inscripcion': {e}")
+                                    import traceback
+                                    traceback.print_exc()
+                    else:
+                        print("[INFO] La tabla 'actividades' no existe aún, se creará con db.create_all()")
             except Exception as e:
                 print(f"[WARNING] Error al verificar columnas: {e}")
             

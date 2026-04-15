@@ -84,6 +84,12 @@ def inscribir_actividad(actividad_id):
     
     actividad = Actividad.query.get_or_404(actividad_id)
     beneficiario_id = request.form.get('beneficiario_id', '').strip()
+    redirect_destino = request.referrer or url_for('socios.actividades')
+
+    # Requerir selección explícita de a quién inscribir (socio o beneficiario)
+    if not beneficiario_id:
+        flash('Debes seleccionar a qué integrante de la familia quieres inscribir.', 'warning')
+        return redirect(redirect_destino)
     
     # Determinar si es inscripción del socio o de un beneficiario
     es_beneficiario = beneficiario_id and beneficiario_id != 'socio'
@@ -98,42 +104,47 @@ def inscribir_actividad(actividad_id):
             beneficiario = Beneficiario.query.filter_by(id=beneficiario_id_int, socio_id=current_user.id).first()
             if not beneficiario:
                 flash('El beneficiario no pertenece a tu cuenta.', 'error')
-                return redirect(url_for('socios.actividades'))
+                return redirect(redirect_destino)
             
             # Verificar si el beneficiario ya está inscrito
             if actividad.beneficiario_inscrito(beneficiario_id_int):
                 flash(f'{beneficiario.nombre} ya está inscrito en esta actividad.', 'warning')
-                return redirect(url_for('socios.actividades'))
+                return redirect(redirect_destino)
             
             ano_nacimiento = beneficiario.ano_nacimiento
             nombre_inscrito = f"{beneficiario.nombre} {beneficiario.primer_apellido}"
         except ValueError:
             flash('ID de beneficiario inválido.', 'error')
-            return redirect(url_for('socios.actividades'))
+            return redirect(redirect_destino)
     else:
         # Verificar si el socio ya está inscrito
         if actividad.usuario_inscrito(current_user.id):
             flash('Ya estás inscrito en esta actividad.', 'warning')
-            return redirect(url_for('socios.actividades'))
+            return redirect(redirect_destino)
         
         ano_nacimiento = current_user.ano_nacimiento
     
     # Verificar si hay plazas disponibles
+    if actividad.bloqueada_inscripcion:
+        flash('Las inscripciones para esta actividad están bloqueadas por la directiva.', 'warning')
+        return redirect(redirect_destino)
+
+    # Verificar si hay plazas disponibles
     if not actividad.tiene_plazas_disponibles():
         flash('No hay plazas disponibles para esta actividad.', 'error')
-        return redirect(url_for('socios.actividades'))
+        return redirect(redirect_destino)
     
     # Verificar si la actividad no ha pasado
     if actividad.fecha <= datetime.utcnow():
         flash('Esta actividad ya ha terminado.', 'error')
-        return redirect(url_for('socios.actividades'))
+        return redirect(redirect_destino)
     
     # Verificar restricción de edad
     if actividad.tiene_restriccion_edad():
         puede_inscribirse, mensaje_error = actividad.puede_inscribirse_por_edad(ano_nacimiento)
         if not puede_inscribirse:
             flash(f'No se puede inscribir en esta actividad: {mensaje_error}', 'error')
-            return redirect(url_for('socios.actividades'))
+            return redirect(redirect_destino)
     
     # Crear inscripción
     inscripcion = Inscripcion(
@@ -151,13 +162,13 @@ def inscribir_actividad(actividad_id):
         else:
             flash(f'Te has inscrito exitosamente en "{actividad.nombre}".', 'success')
         
-        return redirect(url_for('socios.dashboard'))
+        return redirect(redirect_destino)
     except Exception as e:
         db.session.rollback()
         flash(f'Error al inscribirse en la actividad: {str(e)}. Por favor, inténtalo de nuevo.', 'error')
         import traceback
         traceback.print_exc()
-        return redirect(url_for('socios.actividades'))
+        return redirect(redirect_destino)
 
 @socios_bp.route('/actividades/<int:actividad_id>/cancelar', methods=['POST'])
 @login_required
