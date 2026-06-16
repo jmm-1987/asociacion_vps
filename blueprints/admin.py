@@ -1052,34 +1052,70 @@ def inscritos_pdf(actividad_id):
         
         # Tabla de inscritos
         if inscripciones:
-            data = [['#', 'Nombre', 'Nombre de Usuario', 'Fecha de Inscripción', 'Asistencia']]
+            usuario_col_style = ParagraphStyle(
+                'UsuarioCol',
+                parent=normal_style,
+                fontSize=8,
+                leading=10,
+            )
+            fecha_col_style = ParagraphStyle(
+                'FechaCol',
+                parent=normal_style,
+                fontSize=7,
+                leading=8,
+                alignment=TA_CENTER,
+            )
+
+            def edad_inscrito(inscripcion):
+                ano_nac = None
+                if inscripcion.beneficiario:
+                    ano_nac = inscripcion.beneficiario.ano_nacimiento
+                else:
+                    ano_nac = inscripcion.usuario.ano_nacimiento
+                if not ano_nac:
+                    return '-'
+                return str(datetime.now().year - ano_nac)
+
+            data = [['#', 'Nombre', 'Nombre de Usuario', 'Edad', 'Fecha Inscrip.', 'Asistencia']]
             
             for idx, inscripcion in enumerate(inscripciones, 1):
                 asistencia = "Asistió" if inscripcion.asiste else "No asistió"
                 if inscripcion.beneficiario:
                     nombre_completo = f"{inscripcion.beneficiario.nombre} {inscripcion.beneficiario.primer_apellido}"
-                    nombre_usuario_mostrar = f"Beneficiario de {inscripcion.usuario.nombre}"
+                    if inscripcion.beneficiario.segundo_apellido:
+                        nombre_completo += f" {inscripcion.beneficiario.segundo_apellido}"
+                    nombre_usuario_mostrar = f"Benef. de {inscripcion.usuario.nombre}"
                 else:
                     nombre_completo = inscripcion.usuario.nombre
                     nombre_usuario_mostrar = inscripcion.usuario.nombre_usuario
                 
                 data.append([
                     str(idx),
-                    nombre_completo,
-                    nombre_usuario_mostrar,
-                    inscripcion.fecha_inscripcion.strftime('%d/%m/%Y %H:%M'),
-                    asistencia
+                    Paragraph(nombre_completo, normal_style),
+                    Paragraph(nombre_usuario_mostrar, usuario_col_style),
+                    edad_inscrito(inscripcion),
+                    Paragraph(
+                        inscripcion.fecha_inscripcion.strftime('%d/%m/%Y<br/>%H:%M'),
+                        fecha_col_style,
+                    ),
+                    asistencia,
                 ])
             
-            table = Table(data, colWidths=[1*cm, 5*cm, 5*cm, 4*cm, 3*cm])
+            # Más ancho para nombre de usuario; fecha más estrecha y pequeña
+            table = Table(data, colWidths=[0.7*cm, 3.8*cm, 6.5*cm, 1*cm, 2.2*cm, 2.3*cm])
             table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#333333')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # Columna #
+                ('ALIGN', (3, 1), (3, -1), 'CENTER'),   # Columna edad
+                ('ALIGN', (4, 1), (4, -1), 'CENTER'),   # Columna fecha
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
                 ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('FONTSIZE', (3, 1), (3, -1), 9),
+                ('FONTSIZE', (4, 1), (4, -1), 7),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
                 ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
