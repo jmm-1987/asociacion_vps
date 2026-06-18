@@ -2,19 +2,47 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <title>{% block title %}AV Montealto{% endblock %}</title>
-    
+    {% block head %}{% endblock %}
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20250616j">
 </head>
 <body>
+    <div class="fondo-animado" aria-hidden="true">
+        <span class="fondo-item fondo-item--1"><i class="bi bi-house-heart"></i></span>
+        <span class="fondo-item fondo-item--2"><i class="bi bi-people-fill"></i></span>
+        <span class="fondo-item fondo-item--3"><i class="bi bi-star-fill"></i></span>
+        <span class="fondo-item fondo-item--4"><i class="bi bi-balloon-heart-fill"></i></span>
+        <span class="fondo-item fondo-item--5"><i class="bi bi-music-note-beamed"></i></span>
+        <span class="fondo-item fondo-item--6"><i class="bi bi-heart-fill"></i></span>
+        <span class="fondo-item fondo-item--7"><i class="bi bi-sun-fill"></i></span>
+        <span class="fondo-item fondo-item--8"><i class="bi bi-flower1"></i></span>
+        <span class="fondo-item fondo-item--9"></span>
+        <span class="fondo-item fondo-item--10"></span>
+        <span class="fondo-item fondo-item--11"></span>
+        <span class="fondo-item fondo-item--12"></span>
+        <span class="fondo-item fondo-item--13"><i class="bi bi-emoji-smile-fill"></i></span>
+        <span class="fondo-item fondo-item--14"><i class="bi bi-tree-fill"></i></span>
+        <span class="fondo-item fondo-item--15"><i class="bi bi-gift-fill"></i></span>
+        <span class="fondo-item fondo-item--16"><i class="bi bi-house-door-fill"></i></span>
+        <span class="fondo-item fondo-item--17"><i class="bi bi-stars"></i></span>
+        <span class="fondo-item fondo-item--18"><i class="bi bi-balloon-fill"></i></span>
+        <span class="fondo-item fondo-item--19"><i class="bi bi-hand-thumbs-up-fill"></i></span>
+        <span class="fondo-item fondo-item--20"></span>
+        <span class="fondo-item fondo-item--21"></span>
+        <span class="fondo-item fondo-item--22"><i class="bi bi-chat-heart-fill"></i></span>
+        <span class="fondo-item fondo-item--23"><i class="bi bi-cup-hot-fill"></i></span>
+        <span class="fondo-item fondo-item--24"></span>
+        <span class="fondo-item fondo-item--25"><i class="bi bi-geo-alt-fill"></i></span>
+    </div>
+
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark site-layer">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <img src="{{ url_for('static', filename='logo.jpg') }}" alt="AV Montealto" style="height: 40px; width: auto;">
@@ -117,16 +145,18 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main class="container mt-4">
+    <main class="site-layer {% block main_class %}container mt-4{% endblock %}">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="mt-5 py-4">
+    <footer class="mt-5 py-4 site-layer">
         <div class="container text-center">
             <p class="text-muted mb-0">&copy; 2024 Asociación de Vecinos de Montealto. Todos los derechos reservados.</p>
         </div>
     </footer>
+
+    {% block modals %}{% endblock %}
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

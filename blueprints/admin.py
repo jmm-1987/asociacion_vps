@@ -802,50 +802,61 @@ def editar_actividad(actividad_id):
     actividad = Actividad.query.get_or_404(actividad_id)
     
     if request.method == 'POST':
-        actividad.nombre = request.form.get('nombre')
-        actividad.descripcion = request.form.get('descripcion')
-        actividad.aforo_maximo = int(request.form.get('aforo_maximo'))
+        nombre = request.form.get('nombre', '').strip()
+        descripcion = request.form.get('descripcion', '').strip()
+        fecha_str = request.form.get('fecha', '').strip()
+        aforo_str = request.form.get('aforo_maximo', '').strip()
         edad_minima = request.form.get('edad_minima', '').strip()
         edad_maxima = request.form.get('edad_maxima', '').strip()
-        
+
+        if not nombre or not fecha_str or not aforo_str:
+            flash('Nombre, fecha y aforo máximo son obligatorios.', 'error')
+            return render_template('admin/editar_actividad.html', actividad=actividad)
+
         try:
-            fecha_obj = datetime.strptime(request.form.get('fecha'), '%Y-%m-%dT%H:%M')
-            actividad.fecha = fecha_obj
-            
-            # Procesar edades (pueden estar vacías)
+            fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%dT%H:%M')
+            aforo = int(aforo_str)
+            if aforo <= 0:
+                raise ValueError()
+
             edad_min = int(edad_minima) if edad_minima else None
             edad_max = int(edad_maxima) if edad_maxima else None
-            
-            # Validar que la edad mínima no sea mayor que la máxima
+
             if edad_min is not None and edad_max is not None and edad_min > edad_max:
                 flash('La edad mínima no puede ser mayor que la edad máxima.', 'error')
                 return render_template('admin/editar_actividad.html', actividad=actividad)
-            
-            # Validar rangos de edad
+
             if edad_min is not None and (edad_min < 0 or edad_min > 120):
                 flash('La edad mínima debe estar entre 0 y 120 años.', 'error')
                 return render_template('admin/editar_actividad.html', actividad=actividad)
-            
+
             if edad_max is not None and (edad_max < 0 or edad_max > 120):
                 flash('La edad máxima debe estar entre 0 y 120 años.', 'error')
                 return render_template('admin/editar_actividad.html', actividad=actividad)
-            
+
+            actividad.nombre = nombre
+            actividad.descripcion = descripcion or None
+            actividad.fecha = fecha_obj
+            actividad.aforo_maximo = aforo
             actividad.edad_minima = edad_min
             actividad.edad_maxima = edad_max
-            
-        except ValueError:
-            flash('Fecha o edades inválidos.', 'error')
-            return render_template('admin/editar_actividad.html', actividad=actividad)
-        
-        try:
+
+            db.session.add(actividad)
             db.session.commit()
+
             flash(f'Actividad "{actividad.nombre}" actualizada exitosamente.', 'success')
             return redirect(url_for('admin.gestion_actividades'))
+        except ValueError:
+            db.session.rollback()
+            flash('Fecha, aforo o edades inválidos.', 'error')
+            db.session.refresh(actividad)
+            return render_template('admin/editar_actividad.html', actividad=actividad)
         except Exception as e:
             db.session.rollback()
             flash(f'Error al actualizar la actividad: {str(e)}. Por favor, inténtalo de nuevo.', 'error')
             import traceback
             traceback.print_exc()
+            db.session.refresh(actividad)
             return render_template('admin/editar_actividad.html', actividad=actividad)
     
     return render_template('admin/editar_actividad.html', actividad=actividad)
