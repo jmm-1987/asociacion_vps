@@ -122,7 +122,7 @@ def inscribir_actividad(actividad_id):
             flash('Ya estás inscrito en esta actividad.', 'warning')
             return redirect(redirect_destino)
         
-        ano_nacimiento = current_user.ano_nacimiento
+        ano_nacimiento = current_user.ano_para_inscripcion()
     
     # Verificar si hay plazas disponibles
     if actividad.bloqueada_inscripcion:
@@ -179,12 +179,28 @@ def cancelar_inscripcion(actividad_id):
     
     actividad = Actividad.query.get_or_404(actividad_id)
     beneficiario_id = request.form.get('beneficiario_id', '').strip()
+    inscripcion_id = request.form.get('inscripcion_id', type=int)
     
-    # Buscar la inscripción (socio o beneficiario)
+    # Buscar la inscripción concreta. Así no se cancela al titular cuando la ficha del beneficiario ya no existe.
     inscripcion = None
     nombre_cancelar = "tu inscripción"
-    
-    if beneficiario_id and beneficiario_id != 'socio':
+
+    if inscripcion_id:
+        inscripcion = Inscripcion.query.filter_by(
+            id=inscripcion_id,
+            user_id=current_user.id,
+            actividad_id=actividad_id
+        ).first()
+        if not inscripcion:
+            flash('No se ha encontrado la inscripción.', 'error')
+            return redirect(url_for('socios.dashboard'))
+        if inscripcion.beneficiario:
+            nombre_cancelar = f"{inscripcion.beneficiario.nombre} {inscripcion.beneficiario.primer_apellido}"
+        elif inscripcion.beneficiario_id:
+            nombre_cancelar = 'el beneficiario dado de baja'
+        else:
+            nombre_cancelar = 'tu inscripción'
+    elif beneficiario_id and beneficiario_id != 'socio':
         # Es una inscripción de beneficiario
         try:
             beneficiario_id_int = int(beneficiario_id)
@@ -222,13 +238,14 @@ def cancelar_inscripcion(actividad_id):
     
     # Permitir cancelar en cualquier momento (sin restricción de tiempo)
     try:
+        es_titular = inscripcion.beneficiario_id is None
         db.session.delete(inscripcion)
         db.session.commit()
         
-        if beneficiario_id and beneficiario_id != 'socio':
-            flash(f'Has cancelado la inscripción de {nombre_cancelar} en "{actividad.nombre}".', 'success')
-        else:
+        if es_titular:
             flash(f'Has cancelado tu inscripción en "{actividad.nombre}".', 'success')
+        else:
+            flash(f'Has cancelado la inscripción de {nombre_cancelar} en "{actividad.nombre}".', 'success')
         
         return redirect(url_for('socios.dashboard'))
     except Exception as e:

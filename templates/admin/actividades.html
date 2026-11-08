@@ -199,7 +199,11 @@
 function confirmarEliminar(actividadId, nombre) {
     document.getElementById('nombreActividad').textContent = nombre;
     document.getElementById('formEliminar').action = "{{ url_for('admin.eliminar_actividad', actividad_id=0) }}".replace('0', actividadId);
-    new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+    const modalEl = document.getElementById('modalEliminar');
+    if (modalEl.parentElement !== document.body) {
+        document.body.appendChild(modalEl);
+    }
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
 }
 
 // Búsqueda dinámica en tiempo real

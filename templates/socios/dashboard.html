@@ -92,73 +92,56 @@
                                         <span class="badge bg-info mb-2">
                                             {{ actividad.numero_inscritos() }}/{{ actividad.aforo_maximo }}
                                         </span><br>
-                                        {% if actividad.usuario_inscrito(current_user.id) %}
-                                            <span class="badge bg-success">Inscrito</span>
+                                        {% set opciones = actividad.quienes_pueden_inscribirse(current_user, beneficiarios) %}
+                                        {% if actividad.bloqueada_inscripcion %}
+                                            <span class="badge bg-warning text-dark">Bloqueada</span>
                                         {% elif not actividad.tiene_plazas_disponibles() %}
                                             <span class="badge bg-danger">Completo</span>
-                                        {% else %}
-                                            {% set socio_puede = True %}
-                                            {% set socio_mensaje = '' %}
-                                            {% if actividad.tiene_restriccion_edad() %}
-                                                {% set socio_puede, socio_mensaje = actividad.puede_inscribirse_por_edad(current_user.ano_nacimiento) %}
-                                            {% endif %}
-
-                                            {% set beneficiarios_disponibles = [] %}
-                                            {% if beneficiarios %}
-                                                {% for ben in beneficiarios %}
-                                                    {% if not actividad.beneficiario_inscrito(ben.id) %}
-                                                        {% set ben_puede = True %}
-                                                        {% if actividad.tiene_restriccion_edad() %}
-                                                            {% set ben_puede, _ = actividad.puede_inscribirse_por_edad(ben.ano_nacimiento) %}
-                                                        {% endif %}
-                                                        {% if ben_puede %}
-                                                            {% set _ = beneficiarios_disponibles.append(ben) %}
-                                                        {% endif %}
+                                        {% elif opciones.socio_puede or opciones.beneficiarios %}
+                                            <div class="dropdown d-inline-block">
+                                                <button class="btn btn-primary btn-sm dropdown-toggle" type="button"
+                                                        id="dropdownInscripcionPanel{{ actividad.id }}"
+                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-plus-circle me-1"></i>
+                                                    Inscribirse
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownInscripcionPanel{{ actividad.id }}">
+                                                    {% if opciones.socio_puede %}
+                                                        <li>
+                                                            <form method="POST" action="{{ url_for('socios.inscribir_actividad', actividad_id=actividad.id) }}" style="display: inline;">
+                                                                <input type="hidden" name="beneficiario_id" value="socio">
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i class="bi bi-person me-2"></i>
+                                                                    Yo ({{ current_user.nombre }})
+                                                                </button>
+                                                            </form>
+                                                        </li>
                                                     {% endif %}
-                                                {% endfor %}
-                                            {% endif %}
-
-                                            {% if socio_puede or beneficiarios_disponibles|length > 0 %}
-                                                <div class="dropdown d-inline-block">
-                                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button"
-                                                            id="dropdownInscripcionPanel{{ actividad.id }}"
-                                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="bi bi-plus-circle me-1"></i>
-                                                        Inscribirse
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownInscripcionPanel{{ actividad.id }}">
-                                                        {% if socio_puede %}
+                                                    {% if opciones.beneficiarios %}
+                                                        {% if opciones.socio_puede %}
+                                                            <li><hr class="dropdown-divider"></li>
+                                                        {% endif %}
+                                                        {% for ben in opciones.beneficiarios %}
                                                             <li>
                                                                 <form method="POST" action="{{ url_for('socios.inscribir_actividad', actividad_id=actividad.id) }}" style="display: inline;">
-                                                                    <input type="hidden" name="beneficiario_id" value="socio">
+                                                                    <input type="hidden" name="beneficiario_id" value="{{ ben.id }}">
                                                                     <button type="submit" class="dropdown-item">
-                                                                        <i class="bi bi-person me-2"></i>
-                                                                        Yo ({{ current_user.nombre }})
+                                                                        <i class="bi bi-person-circle me-2"></i>
+                                                                        {{ ben.nombre }} {{ ben.primer_apellido }}{% if ben.numero_beneficiario %} ({{ ben.numero_beneficiario }}){% endif %}
                                                                     </button>
                                                                 </form>
                                                             </li>
-                                                        {% endif %}
-                                                        {% if beneficiarios_disponibles|length > 0 %}
-                                                            {% if socio_puede %}
-                                                                <li><hr class="dropdown-divider"></li>
-                                                            {% endif %}
-                                                            {% for ben in beneficiarios_disponibles %}
-                                                                <li>
-                                                                    <form method="POST" action="{{ url_for('socios.inscribir_actividad', actividad_id=actividad.id) }}" style="display: inline;">
-                                                                        <input type="hidden" name="beneficiario_id" value="{{ ben.id }}">
-                                                                        <button type="submit" class="dropdown-item">
-                                                                            <i class="bi bi-person-circle me-2"></i>
-                                                                            {{ ben.nombre }} {{ ben.primer_apellido }}{% if ben.numero_beneficiario %} ({{ ben.numero_beneficiario }}){% endif %}
-                                                                        </button>
-                                                                    </form>
-                                                                </li>
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    </ul>
-                                                </div>
-                                            {% else %}
-                                                <span class="badge bg-warning" title="{{ socio_mensaje }}">No disponible</span>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                            {% if opciones.socio_ya %}
+                                                <div><span class="badge bg-success mt-1">Tú ya inscrito</span></div>
                                             {% endif %}
+                                        {% elif opciones.socio_ya %}
+                                            <span class="badge bg-success">Inscrito</span>
+                                        {% else %}
+                                            <span class="badge bg-warning" title="{{ opciones.socio_mensaje or '' }}">No disponible</span>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -209,11 +192,7 @@
                                     </small>
                                     {% for insc in inscripciones_por_actividad[actividad.id] %}
                                         <span class="badge bg-success-subtle text-success border border-success me-1 mb-1">
-                                            {% if insc.beneficiario %}
-                                                {{ insc.beneficiario.nombre }} {{ insc.beneficiario.primer_apellido }}
-                                            {% else %}
-                                                {{ current_user.nombre }} (Titular)
-                                            {% endif %}
+                                            {{ insc.nombre_para_listado() }}{% if insc.beneficiario_id is none %} (Titular){% endif %}
                                         </span>
                                     {% endfor %}
                                 </div>
@@ -229,14 +208,10 @@
                                             {% for insc in inscripciones_por_actividad[actividad.id] %}
                                                 <li>
                                                     <form method="POST" action="{{ url_for('socios.cancelar_inscripcion', actividad_id=actividad.id) }}" style="display: inline;">
-                                                        <input type="hidden" name="beneficiario_id" value="{% if insc.beneficiario %}{{ insc.beneficiario.id }}{% else %}socio{% endif %}">
+                                                        <input type="hidden" name="inscripcion_id" value="{{ insc.id }}">
                                                         <button type="submit" class="dropdown-item" 
                                                                 onclick="return confirm('¿Cancelar esta inscripción?')">
-                                                            {% if insc.beneficiario %}
-                                                                {{ insc.beneficiario.nombre }}
-                                                            {% else %}
-                                                                Tú
-                                                            {% endif %}
+                                                            {{ insc.nombre_en_familia() }}
                                                         </button>
                                                     </form>
                                                 </li>
@@ -246,7 +221,7 @@
                                 {% else %}
                                     {% set insc = inscripciones_por_actividad[actividad.id][0] %}
                                     <form method="POST" action="{{ url_for('socios.cancelar_inscripcion', actividad_id=actividad.id) }}" style="display: inline;">
-                                        <input type="hidden" name="beneficiario_id" value="{% if insc.beneficiario %}{{ insc.beneficiario.id }}{% else %}socio{% endif %}">
+                                        <input type="hidden" name="inscripcion_id" value="{{ insc.id }}">
                                         <button type="submit" class="btn btn-outline-danger btn-sm" data-no-loading="true"
                                                 onclick="return confirm('¿Estás seguro de cancelar esta inscripción?')">
                                             <i class="bi bi-x-circle"></i>

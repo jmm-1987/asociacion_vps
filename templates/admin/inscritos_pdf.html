@@ -169,7 +169,7 @@
                 {% for inscripcion in inscripciones %}
                     <tr>
                         <td>{{ loop.index }}</td>
-                        <td><strong>{{ inscripcion.usuario.nombre }}</strong></td>
+                        <td><strong>{{ inscripcion.nombre_para_listado() }}</strong></td>
                         <td>{{ inscripcion.usuario.email }}</td>
                         <td>{{ inscripcion.fecha_inscripcion.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td>

@@ -257,28 +257,30 @@
              data-bs-ride="carousel"
              data-bs-interval="5000"
              data-bs-pause="false">
+            {% if fotos_portada|length > 1 %}
             <div class="carousel-indicators">
-                <button type="button" data-bs-target="#portadaCartelesCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Cartel motos"></button>
-                <button type="button" data-bs-target="#portadaCartelesCarousel" data-bs-slide-to="1" aria-label="Cartel La Guardia"></button>
+                {% for foto in fotos_portada %}
+                <button type="button" data-bs-target="#portadaCartelesCarousel" data-bs-slide-to="{{ loop.index0 }}" {% if loop.first %}class="active" aria-current="true"{% endif %} aria-label="{{ foto.titulo }}"></button>
+                {% endfor %}
             </div>
+            {% endif %}
             <div class="carousel-inner">
+                {% for foto in fotos_portada %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <img src="{{ url_for('static', filename=foto.archivo) }}"
+                         alt="{{ foto.titulo }}"
+                         class="portada-cartel-clic"
+                         role="button"
+                         tabindex="0"
+                         data-cartel-titulo="{{ foto.titulo }}">
+                </div>
+                {% else %}
                 <div class="carousel-item active">
-                    <img src="{{ url_for('static', filename='cartel coches.jpeg') }}"
-                         alt="Cartel concentración de motos"
-                         class="portada-cartel-clic"
-                         role="button"
-                         tabindex="0"
-                         data-cartel-titulo="Cartel concentración de motos">
+                    <div class="d-flex align-items-center justify-content-center text-white h-100">Sin fotos seleccionadas</div>
                 </div>
-                <div class="carousel-item">
-                    <img src="{{ url_for('static', filename='cartel en guardia.jpeg') }}"
-                         alt="Cartel La Guardia"
-                         class="portada-cartel-clic"
-                         role="button"
-                         tabindex="0"
-                         data-cartel-titulo="Cartel La Guardia">
-                </div>
+                {% endfor %}
             </div>
+            {% if fotos_portada|length > 1 %}
             <button class="carousel-control-prev" type="button" data-bs-target="#portadaCartelesCarousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Anterior</span>
@@ -287,6 +289,7 @@
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Siguiente</span>
             </button>
+            {% endif %}
         </div>
     </div>
 

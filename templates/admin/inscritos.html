@@ -46,11 +46,14 @@
                                     <tr>
                                         <td>
                                             {% if inscripcion.beneficiario %}
-                                                <strong>{{ inscripcion.beneficiario.nombre }} {{ inscripcion.beneficiario.primer_apellido }}{% if inscripcion.beneficiario.segundo_apellido %} {{ inscripcion.beneficiario.segundo_apellido }}{% endif %}</strong>
+                                                <strong>{{ inscripcion.nombre_para_listado() }}</strong>
                                                 <br><small class="text-success">Beneficiario de {{ inscripcion.usuario.nombre }}</small>
                                                 {% if inscripcion.beneficiario.numero_beneficiario %}
                                                     <br><small class="text-muted">Nº: <strong>{{ inscripcion.beneficiario.numero_beneficiario }}</strong></small>
                                                 {% endif %}
+                                            {% elif inscripcion.beneficiario_id %}
+                                                <strong>Beneficiario dado de baja</strong>
+                                                <br><small class="text-muted">La ficha familiar se rehízo y esta plaza se quedó sin nombre.</small>
                                             {% else %}
                                                 <strong>{{ inscripcion.usuario.nombre }}</strong>
                                                 {% if inscripcion.usuario.numero_socio %}
@@ -61,8 +64,10 @@
                                         <td>
                                             {% if inscripcion.beneficiario %}
                                                 <small class="text-muted">Beneficiario</small>
+                                            {% elif inscripcion.beneficiario_id %}
+                                                <small class="text-muted">Sin ficha</small>
                                             {% else %}
-                                                {{ inscripcion.usuario.email }}
+                                                Titular
                                             {% endif %}
                                         </td>
                                         <td>{{ inscripcion.fecha_inscripcion.strftime('%d/%m/%Y %H:%M') }}</td>

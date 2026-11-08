@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response, current_app, abort
 from flask_login import login_user, logout_user, login_required, current_user
-from models import User, SolicitudSocio, BeneficiarioSolicitud, db
+from models import User, SolicitudSocio, BeneficiarioSolicitud, FotoPortada, db
 from datetime import datetime
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
@@ -39,10 +39,47 @@ def quitar_acentos(texto):
     # Convertir a mayúsculas
     return texto.upper()
 
+def asegurar_fotos_portada_iniciales():
+    """La primera vez deja seleccionados los dos carteles que ya estaban en la portada."""
+    if FotoPortada.query.count() > 0:
+        return
+    iniciales = [
+        ('cartel coches.jpeg', 'Cartel concentración de motos'),
+        ('cartel en guardia.jpeg', 'Cartel La Guardia'),
+    ]
+    orden = 0
+    for archivo, titulo in iniciales:
+        if os.path.isfile(os.path.join(current_app.static_folder, archivo)):
+            db.session.add(FotoPortada(archivo=archivo, titulo=titulo, orden=orden, visible=True))
+            orden += 1
+    if orden:
+        db.session.commit()
+
+
+def fotos_visibles_portada():
+    """Fotos marcadas para el slider. Si aún no hay ninguna guardada, usa los dos carteles de siempre."""
+    asegurar_fotos_portada_iniciales()
+    fotos = FotoPortada.query.filter_by(visible=True).order_by(FotoPortada.orden.asc(), FotoPortada.id.asc()).all()
+    if fotos:
+        existentes = []
+        carpeta = current_app.static_folder
+        for foto in fotos:
+            archivo = (foto.archivo or '').replace('\\', '/')
+            if not archivo or archivo.startswith('/') or '..' in archivo:
+                continue
+            if os.path.isfile(os.path.join(carpeta, archivo)):
+                existentes.append(foto)
+        return existentes
+    return [
+        {'archivo': 'cartel coches.jpeg', 'titulo': 'Cartel concentración de motos'},
+        {'archivo': 'cartel en guardia.jpeg', 'titulo': 'Cartel La Guardia'},
+    ]
+
+
 @auth_bp.route('/login')
 def login():
     """Página principal/portada sin formulario de login"""
-    return render_template('auth/login.html')
+    return render_template('auth/login.html', fotos_portada=fotos_visibles_portada())
 
 
 @auth_bp.route('/galeria/<seccion>')

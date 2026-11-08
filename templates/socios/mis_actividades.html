@@ -77,11 +77,7 @@
                                 </small>
                                 {% for insc in inscripciones_por_actividad[actividad.id] %}
                                     <span class="badge bg-success-subtle text-success border border-success me-1 mb-1">
-                                        {% if insc.beneficiario %}
-                                            {{ insc.beneficiario.nombre }} {{ insc.beneficiario.primer_apellido }}
-                                        {% else %}
-                                            {{ current_user.nombre }} (Titular)
-                                        {% endif %}
+                                        {{ insc.nombre_para_listado() }}{% if insc.beneficiario_id is none %} (Titular){% endif %}
                                     </span>
                                 {% endfor %}
                             </div>
@@ -106,14 +102,10 @@
                                             {% for insc in inscripciones_por_actividad[actividad.id] %}
                                                 <li>
                                                     <form method="POST" action="{{ url_for('socios.cancelar_inscripcion', actividad_id=actividad.id) }}" style="display: inline;">
-                                                        <input type="hidden" name="beneficiario_id" value="{% if insc.beneficiario %}{{ insc.beneficiario.id }}{% else %}socio{% endif %}">
+                                                        <input type="hidden" name="inscripcion_id" value="{{ insc.id }}">
                                                         <button type="submit" class="dropdown-item" 
                                                                 onclick="return confirm('¿Cancelar esta inscripción?')">
-                                                            {% if insc.beneficiario %}
-                                                                {{ insc.beneficiario.nombre }}
-                                                            {% else %}
-                                                                Tú
-                                                            {% endif %}
+                                                            {{ insc.nombre_en_familia() }}
                                                         </button>
                                                     </form>
                                                 </li>
@@ -123,7 +115,7 @@
                                 {% else %}
                                     {% set insc = inscripciones_por_actividad[actividad.id][0] %}
                                     <form method="POST" action="{{ url_for('socios.cancelar_inscripcion', actividad_id=actividad.id) }}">
-                                        <input type="hidden" name="beneficiario_id" value="{% if insc.beneficiario %}{{ insc.beneficiario.id }}{% else %}socio{% endif %}">
+                                        <input type="hidden" name="inscripcion_id" value="{{ insc.id }}">
                                         <button type="submit" class="btn btn-outline-danger btn-sm w-100" data-no-loading="true"
                                                 onclick="return confirm('¿Estás seguro de cancelar esta inscripción?')">
                                             <i class="bi bi-x-circle me-1"></i>

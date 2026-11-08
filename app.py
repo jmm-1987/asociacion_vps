@@ -158,7 +158,7 @@ def create_app():
                         print(f"[INFO] Base de datos no encontrada en {db_path}. Se creará automáticamente con db.create_all()")
             
             # Importar todos los modelos para que SQLAlchemy los detecte
-            from models import User, Actividad, Inscripcion, SolicitudSocio, BeneficiarioSolicitud, Beneficiario, RegistroFinanciero
+            from models import User, Actividad, Inscripcion, SolicitudSocio, BeneficiarioSolicitud, Beneficiario, RegistroFinanciero, FotoPortada
             
             db.create_all()
             
@@ -213,6 +213,13 @@ def create_app():
                         print("[INFO] La tabla 'actividades' no existe aún, se creará con db.create_all()")
             except Exception as e:
                 print(f"[WARNING] Error al verificar columnas: {e}")
+
+            try:
+                from models import reparar_inscripciones_titular
+                reparar_inscripciones_titular()
+            except Exception as e:
+                db.session.rollback()
+                print(f"[WARNING] No se pudieron revisar las inscripciones del titular: {e}")
             
             # Crear usuarios administradores automáticamente si no existen
             from models import User

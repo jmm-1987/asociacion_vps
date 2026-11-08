@@ -241,8 +241,11 @@
 function eliminarRegistro(registroId) {
     const form = document.getElementById('formEliminar');
     form.action = "{{ url_for('admin.eliminar_registro_financiero', registro_id=0) }}".replace('0', registroId);
-    const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
-    modal.show();
+    const modalEl = document.getElementById('modalEliminar');
+    if (modalEl.parentElement !== document.body) {
+        document.body.appendChild(modalEl);
+    }
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
 }
 
 // Mantener parámetros de filtro al cambiar el checkbox

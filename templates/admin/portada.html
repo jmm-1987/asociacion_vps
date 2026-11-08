@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Fotos de la portada - Asociación de Vecinos de Montealto{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-images me-2"></i>
+        Fotos de la portada
+    </h1>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>
+        Volver al panel
+    </a>
+</div>
+
+<p class="text-muted">
+    Las fotos marcadas salen en el slider de la página pública, en el orden de esta lista.
+    Se puede ampliar cada una al pulsarla, igual que hasta ahora.
+</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
+            <input type="hidden" name="accion" value="subir">
+            <div class="col-md-8">
+                <label for="fotos" class="form-label">Añadir fotos</label>
+                <input class="form-control" type="file" id="fotos" name="fotos" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+                <div class="form-text">JPG, PNG, WEBP o GIF. Máximo 8 MB por foto.</div>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-upload me-1"></i>
+                    Subir y mostrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if fotos %}
+    <div class="row g-3">
+        {% for foto in fotos %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card h-100">
+                <img src="{{ url_for('static', filename=foto.archivo) }}" alt="{{ foto.titulo }}" class="card-img-top" style="height: 220px; object-fit: contain; background: #1a1a1a;">
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="accion" value="guardar">
+                        <input type="hidden" name="foto_id" value="{{ foto.id }}">
+                        <label class="form-label" for="titulo-{{ foto.id }}">Texto al ampliar</label>
+                        <input class="form-control mb-3" id="titulo-{{ foto.id }}" name="titulo" value="{{ foto.titulo }}" maxlength="150">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="visible" value="1" id="visible-{{ foto.id }}" {% if foto.visible %}checked{% endif %}>
+                            <label class="form-check-label" for="visible-{{ foto.id }}">Sale en la portada</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                    </form>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <form method="POST">
+                        <input type="hidden" name="accion" value="subir_orden">
+                        <input type="hidden" name="foto_id" value="{{ foto.id }}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm" {% if loop.first %}disabled{% endif %} title="Mover antes">
+                            <i class="bi bi-arrow-up"></i>
+                        </button>
+                    </form>
+                    <form method="POST">
+                        <input type="hidden" name="accion" value="bajar_orden">
+                        <input type="hidden" name="foto_id" value="{{ foto.id }}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm" {% if loop.last %}disabled{% endif %} title="Mover después">
+                            <i class="bi bi-arrow-down"></i>
+                        </button>
+                    </form>
+                    <form method="POST" class="ms-auto" onsubmit="return confirm('¿Quitar esta foto del slider?');">
+                        <input type="hidden" name="accion" value="eliminar">
+                        <input type="hidden" name="foto_id" value="{{ foto.id }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Quitar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">Todavía no hay fotos. Sube la primera para el slider.</div>
+{% endif %}
+{% endblock %}

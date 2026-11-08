@@ -56,10 +56,10 @@ body::before {
     }
 }
 
-/* Capa de elementos flotantes en todo el fondo */
+/* Por encima de los iconos del fondo, sin crear contexto de apilamiento.
+   Un z-index aquí encerraría el modal y la capa oscura (en body) quedaría encima, tragándose los clics. */
 .site-layer {
     position: relative;
-    z-index: 1;
 }
 
 .fondo-animado {

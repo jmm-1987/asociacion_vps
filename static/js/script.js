@@ -1,5 +1,18 @@
 // JavaScript personalizado para la Asociación de Vecinos de Montealto
 
+// Bootstrap pinta la capa oscura en <body>. Si el modal sigue dentro de <main>,
+// esa capa queda encima y no se puede pulsar Cancelar, cerrar ni volver.
+function moverModalAlBody(modal) {
+    if (modal && modal.classList && modal.classList.contains('modal') && modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+    }
+}
+
+document.querySelectorAll('.modal').forEach(moverModalAlBody);
+document.addEventListener('show.bs.modal', function(event) {
+    moverModalAlBody(event.target);
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-ocultar alertas flash después de 5 segundos
     const alerts = document.querySelectorAll('.alert-dismissible');
@@ -149,8 +162,10 @@ function confirmarEliminar(id, nombre) {
         form.action = form.action.replace('0', id);
     }
     
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
+    if (modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+    }
+    bootstrap.Modal.getOrCreateInstance(modal).show();
 }
 
 // Función para mostrar notificaciones toast

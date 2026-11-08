@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from flask_login import login_required, current_user
-from models import User, Actividad, Inscripcion, SolicitudSocio, BeneficiarioSolicitud, Beneficiario, RegistroFinanciero, db
+from models import User, Actividad, Inscripcion, SolicitudSocio, BeneficiarioSolicitud, Beneficiario, RegistroFinanciero, FotoPortada, db
 from datetime import datetime, timedelta
 from functools import wraps
 import secrets
 import string
+import uuid
 import re
 import unicodedata
 import json
@@ -69,6 +70,103 @@ def dashboard():
                          total_socios=total_socios,
                          total_actividades=total_actividades,
                          solicitudes_pendientes=solicitudes_pendientes)
+
+
+EXTENSIONES_PORTADA = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}
+MAX_BYTES_PORTADA = 8 * 1024 * 1024
+
+
+def _fotos_portada_ordenadas():
+    return FotoPortada.query.order_by(FotoPortada.orden.asc(), FotoPortada.id.asc()).all()
+
+
+def _archivo_portada_seguro(archivo):
+    archivo = (archivo or '').replace('\\', '/').lstrip('/')
+    if not archivo or '..' in archivo.split('/'):
+        return None
+    return archivo
+
+
+def _renumerar_portada(fotos):
+    for indice, foto in enumerate(fotos):
+        foto.orden = indice
+
+
+@admin_bp.route('/portada', methods=['GET', 'POST'])
+@login_required
+@directiva_required
+def portada():
+    """Elegir las fotos del slider de la portada pública."""
+    from blueprints.auth import asegurar_fotos_portada_iniciales
+    asegurar_fotos_portada_iniciales()
+    if request.method == 'POST':
+        accion = request.form.get('accion')
+        if accion == 'subir':
+            archivos = request.files.getlist('fotos')
+            guardadas = 0
+            carpeta = os.path.join(current_app.static_folder, 'portada')
+            os.makedirs(carpeta, exist_ok=True)
+            orden = FotoPortada.query.count()
+            for archivo in archivos:
+                if not archivo or not archivo.filename:
+                    continue
+                extension = os.path.splitext(archivo.filename)[1].lower()
+                if extension not in EXTENSIONES_PORTADA:
+                    flash(f'{archivo.filename} no es una imagen válida.', 'error')
+                    continue
+                contenido = archivo.read(MAX_BYTES_PORTADA + 1)
+                if len(contenido) > MAX_BYTES_PORTADA:
+                    flash(f'{archivo.filename} supera los 8 MB.', 'error')
+                    continue
+                if not contenido:
+                    continue
+                nombre = f'{uuid.uuid4().hex}{extension}'
+                ruta = os.path.join(carpeta, nombre)
+                with open(ruta, 'wb') as salida:
+                    salida.write(contenido)
+                titulo = os.path.splitext(archivo.filename)[0].strip()[:150] or 'Cartel'
+                db.session.add(FotoPortada(
+                    archivo=f'portada/{nombre}',
+                    titulo=titulo,
+                    orden=orden,
+                    visible=True,
+                ))
+                orden += 1
+                guardadas += 1
+            if guardadas:
+                db.session.commit()
+                flash(f'Se añadieron {guardadas} foto(s) al slider.', 'success')
+            else:
+                db.session.rollback()
+                flash('No se añadió ninguna foto.', 'error')
+        else:
+            foto = FotoPortada.query.get_or_404(request.form.get('foto_id', type=int))
+            fotos = _fotos_portada_ordenadas()
+            _renumerar_portada(fotos)
+            if accion == 'guardar':
+                foto.titulo = (request.form.get('titulo') or 'Cartel').strip()[:150] or 'Cartel'
+                foto.visible = request.form.get('visible') == '1'
+                db.session.commit()
+                flash('Foto actualizada.', 'success')
+            elif accion in ('subir_orden', 'bajar_orden'):
+                indice = next((i for i, item in enumerate(fotos) if item.id == foto.id), None)
+                destino = indice - 1 if accion == 'subir_orden' else indice + 1
+                if indice is not None and 0 <= destino < len(fotos):
+                    fotos[indice].orden, fotos[destino].orden = fotos[destino].orden, fotos[indice].orden
+                    db.session.commit()
+            elif accion == 'eliminar':
+                archivo = _archivo_portada_seguro(foto.archivo)
+                db.session.delete(foto)
+                db.session.commit()
+                if archivo and archivo.startswith('portada/'):
+                    ruta = os.path.join(current_app.static_folder, archivo)
+                    if os.path.isfile(ruta):
+                        os.remove(ruta)
+                flash('Foto quitada del slider.', 'success')
+        return redirect(url_for('admin.portada'))
+
+    return render_template('admin/portada.html', fotos=_fotos_portada_ordenadas())
+
 
 @admin_bp.route('/socios')
 @login_required
@@ -602,6 +700,7 @@ def editar_socio(socio_id):
                     ben_segundo_apellido = quitar_acentos(ben_segundo_apellido)
                 
                 nuevos_beneficiarios.append({
+                    'id': request.form.get(f'beneficiario_id_{i}', type=int),
                     'nombre': ben_nombre,
                     'primer_apellido': ben_primer_apellido,
                     'segundo_apellido': ben_segundo_apellido if ben_segundo_apellido else None,
@@ -612,19 +711,37 @@ def editar_socio(socio_id):
                 continue
         
         try:
-            # Eliminar beneficiarios existentes
-            for beneficiario in beneficiarios:
-                db.session.delete(beneficiario)
-            
-            # Hacer flush para aplicar las eliminaciones antes de crear nuevos
-            db.session.flush()
-            
-            # Crear los beneficiarios en la base de datos
-            for index, ben_data in enumerate(nuevos_beneficiarios, start=1):
-                # Generar número de beneficiario
-                numero_beneficiario = f"{socio.numero_socio}-{index}" if socio.numero_socio else None
-                
-                nuevo_beneficiario = Beneficiario(
+            # Actualizar a quien ya existía. Borrar y crear de nuevo dejaba las inscripciones sin nombre.
+            existentes = {beneficiario.id: beneficiario for beneficiario in beneficiarios}
+            ids_conservados = set()
+            pendientes = []
+            for ben_data in nuevos_beneficiarios:
+                existente = existentes.get(ben_data.get('id'))
+                if existente:
+                    existente.nombre = ben_data['nombre']
+                    existente.primer_apellido = ben_data['primer_apellido']
+                    existente.segundo_apellido = ben_data['segundo_apellido']
+                    existente.ano_nacimiento = ben_data['ano_nacimiento']
+                    existente.fecha_validez = socio.fecha_validez
+                    ids_conservados.add(existente.id)
+                else:
+                    pendientes.append(ben_data)
+
+            numeros_usados = {
+                beneficiario.numero_beneficiario
+                for beneficiario in beneficiarios
+                if beneficiario.numero_beneficiario
+            }
+            siguiente = 1
+            for ben_data in pendientes:
+                numero_beneficiario = None
+                if socio.numero_socio:
+                    while f"{socio.numero_socio}-{siguiente}" in numeros_usados:
+                        siguiente += 1
+                    numero_beneficiario = f"{socio.numero_socio}-{siguiente}"
+                    numeros_usados.add(numero_beneficiario)
+                    siguiente += 1
+                db.session.add(Beneficiario(
                     socio_id=socio.id,
                     nombre=ben_data['nombre'],
                     primer_apellido=ben_data['primer_apellido'],
@@ -632,8 +749,18 @@ def editar_socio(socio_id):
                     ano_nacimiento=ben_data['ano_nacimiento'],
                     fecha_validez=socio.fecha_validez,
                     numero_beneficiario=numero_beneficiario
-                )
-                db.session.add(nuevo_beneficiario)
+                ))
+
+            for beneficiario in beneficiarios:
+                if beneficiario.id in ids_conservados:
+                    continue
+                if beneficiario.inscripciones:
+                    flash(
+                        f'No se ha quitado a {beneficiario.nombre} porque tiene inscripciones en actividades.',
+                        'warning'
+                    )
+                    continue
+                db.session.delete(beneficiario)
             
             # Verificar que el socio tenga cambios pendientes
             if db.session.is_modified(socio):

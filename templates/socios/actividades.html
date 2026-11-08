@@ -67,12 +67,8 @@
                     </div>
                     <div class="card-footer">
                         <div class="d-grid gap-2">
-                            {% if actividad.usuario_inscrito(current_user.id) %}
-                                <span class="badge bg-success w-100 p-2">
-                                    <i class="bi bi-check-circle me-1"></i>
-                                    Tú estás inscrito
-                                </span>
-                            {% elif actividad.bloqueada_inscripcion %}
+                            {% set opciones = actividad.quienes_pueden_inscribirse(current_user, beneficiarios) %}
+                            {% if actividad.bloqueada_inscripcion %}
                                 <button type="button" class="btn btn-warning w-100" disabled>
                                     <i class="bi bi-lock-fill me-2"></i>
                                     Inscripción bloqueada
@@ -82,83 +78,65 @@
                                     <i class="bi bi-x-circle me-2"></i>
                                     Sin Plazas
                                 </button>
-                            {% else %}
-                                {# Verificar si el socio puede inscribirse #}
-                                {% set socio_puede = True %}
-                                {% set socio_mensaje = '' %}
-                                {% if actividad.tiene_restriccion_edad() %}
-                                    {% set socio_puede, socio_mensaje = actividad.puede_inscribirse_por_edad(current_user.ano_nacimiento) %}
-                                {% endif %}
-                                
-                                {# Verificar beneficiarios que pueden inscribirse #}
-                                {% set beneficiarios_disponibles = [] %}
-                                {% if beneficiarios %}
-                                    {% for ben in beneficiarios %}
-                                        {% if not actividad.beneficiario_inscrito(ben.id) %}
-                                            {% set ben_puede = True %}
-                                            {% set ben_mensaje = '' %}
-                                            {% if actividad.tiene_restriccion_edad() %}
-                                                {% set ben_puede, ben_mensaje = actividad.puede_inscribirse_por_edad(ben.ano_nacimiento) %}
-                                            {% endif %}
-                                            {% if ben_puede %}
-                                                {% set _ = beneficiarios_disponibles.append(ben) %}
-                                            {% endif %}
+                            {% elif opciones.socio_puede or opciones.beneficiarios %}
+                                <div class="dropdown">
+                                    <button class="btn btn-primary w-100 dropdown-toggle" type="button"
+                                            id="dropdownInscripcion{{ actividad.id }}"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-plus-circle me-2"></i>
+                                        Inscribirse
+                                    </button>
+                                    <ul class="dropdown-menu w-100" aria-labelledby="dropdownInscripcion{{ actividad.id }}">
+                                        {% if opciones.socio_puede %}
+                                            <li>
+                                                <form method="POST" action="{{ url_for('socios.inscribir_actividad', actividad_id=actividad.id) }}" style="display: inline;">
+                                                    <input type="hidden" name="beneficiario_id" value="socio">
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-person me-2"></i>
+                                                        Yo ({{ current_user.nombre }})
+                                                    </button>
+                                                </form>
+                                            </li>
                                         {% endif %}
-                                    {% endfor %}
-                                {% endif %}
-                                
-                                {# Mostrar opciones de inscripción #}
-                                {% if socio_puede or beneficiarios_disponibles|length > 0 %}
-                                    <div class="dropdown">
-                                        <button class="btn btn-primary w-100 dropdown-toggle" type="button" 
-                                                id="dropdownInscripcion{{ actividad.id }}" 
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-plus-circle me-2"></i>
-                                            Inscribirse
-                                        </button>
-                                        <ul class="dropdown-menu w-100" aria-labelledby="dropdownInscripcion{{ actividad.id }}">
-                                            {% if socio_puede %}
+                                        {% if opciones.beneficiarios %}
+                                            {% if opciones.socio_puede %}
+                                                <li><hr class="dropdown-divider"></li>
+                                            {% endif %}
+                                            {% for ben in opciones.beneficiarios %}
                                                 <li>
                                                     <form method="POST" action="{{ url_for('socios.inscribir_actividad', actividad_id=actividad.id) }}" style="display: inline;">
-                                                        <input type="hidden" name="beneficiario_id" value="socio">
+                                                        <input type="hidden" name="beneficiario_id" value="{{ ben.id }}">
                                                         <button type="submit" class="dropdown-item">
-                                                            <i class="bi bi-person me-2"></i>
-                                                            Yo ({{ current_user.nombre }})
+                                                            <i class="bi bi-person-circle me-2"></i>
+                                                            {{ ben.nombre }} {{ ben.primer_apellido }}{% if ben.numero_beneficiario %} ({{ ben.numero_beneficiario }}){% endif %}
                                                         </button>
                                                     </form>
                                                 </li>
-                                            {% endif %}
-                                            {% if beneficiarios_disponibles|length > 0 %}
-                                                {% if socio_puede %}
-                                                    <li><hr class="dropdown-divider"></li>
-                                                {% endif %}
-                                                {% for ben in beneficiarios_disponibles %}
-                                                    <li>
-                                                        <form method="POST" action="{{ url_for('socios.inscribir_actividad', actividad_id=actividad.id) }}" style="display: inline;">
-                                                            <input type="hidden" name="beneficiario_id" value="{{ ben.id }}">
-                                                            <button type="submit" class="dropdown-item">
-                                                                <i class="bi bi-person-circle me-2"></i>
-                                                                {{ ben.nombre }} {{ ben.primer_apellido }}{% if ben.numero_beneficiario %} ({{ ben.numero_beneficiario }}){% endif %}
-                                                            </button>
-                                                        </form>
-                                                    </li>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </ul>
-                                    </div>
-                                    {% if not socio_puede and socio_mensaje %}
-                                        <small class="text-muted d-block mt-1">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            Tú no puedes inscribirte: {{ socio_mensaje }}
-                                        </small>
-                                    {% endif %}
-                                {% else %}
-                                    <button type="button" class="btn btn-secondary w-100" disabled 
-                                            title="{{ socio_mensaje }}">
-                                        <i class="bi bi-x-circle me-2"></i>
-                                        No disponible
-                                    </button>
-                                    <small class="text-danger d-block mt-1">{{ socio_mensaje }}</small>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                                {% if opciones.socio_ya %}
+                                    <small class="text-success d-block mt-1">Tú ya estás inscrito. Puedes apuntar al resto de la familia.</small>
+                                {% elif not opciones.socio_puede and opciones.socio_mensaje %}
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Tú no puedes inscribirte: {{ opciones.socio_mensaje }}
+                                    </small>
+                                {% endif %}
+                            {% elif opciones.socio_ya %}
+                                <span class="badge bg-success w-100 p-2">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Tú estás inscrito
+                                </span>
+                            {% else %}
+                                <button type="button" class="btn btn-secondary w-100" disabled
+                                        title="{{ opciones.socio_mensaje or '' }}">
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    No disponible
+                                </button>
+                                {% if opciones.socio_mensaje %}
+                                    <small class="text-danger d-block mt-1">{{ opciones.socio_mensaje }}</small>
                                 {% endif %}
                             {% endif %}
                             

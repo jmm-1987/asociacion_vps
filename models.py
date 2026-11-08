@@ -28,12 +28,19 @@ class User(UserMixin, db.Model):
     # Relaciones
     inscripciones = db.relationship('Inscripcion', backref='usuario', lazy=True, cascade='all, delete-orphan')
     
+    def ano_para_inscripcion(self):
+        """Año que se usa para el rango de edad. La fecha completa manda si existe."""
+        if self.fecha_nacimiento:
+            return self.fecha_nacimiento.year
+        return self.ano_nacimiento
+
     def calcular_edad(self):
         """Calcula la edad del usuario basándose en el año de nacimiento"""
-        if not self.ano_nacimiento:
+        ano = self.ano_para_inscripcion()
+        if not ano:
             return None
         año_actual = datetime.now().year
-        return año_actual - self.ano_nacimiento
+        return año_actual - ano
     
     def set_password(self, password):
         """Hash y guarda la contraseña"""
@@ -121,6 +128,33 @@ class Actividad(db.Model):
             return False, f"La edad máxima permitida es {self.edad_maxima} años. Tienes {edad} años."
         
         return True, None
+
+    def quienes_pueden_inscribirse(self, socio, beneficiarios):
+        """Socio y beneficiarios que aún pueden apuntarse. No depende de cuándo se dio de alta el beneficiario."""
+        socio_ya = self.usuario_inscrito(socio.id)
+        socio_puede = False
+        socio_mensaje = None
+        if not socio_ya:
+            if self.tiene_restriccion_edad():
+                socio_puede, socio_mensaje = self.puede_inscribirse_por_edad(socio.ano_para_inscripcion())
+            else:
+                socio_puede = True
+
+        disponibles = []
+        for beneficiario in beneficiarios or []:
+            if self.beneficiario_inscrito(beneficiario.id):
+                continue
+            if self.tiene_restriccion_edad():
+                puede, _mensaje = self.puede_inscribirse_por_edad(beneficiario.ano_nacimiento)
+                if not puede:
+                    continue
+            disponibles.append(beneficiario)
+        return {
+            'socio_ya': socio_ya,
+            'socio_puede': socio_puede,
+            'socio_mensaje': socio_mensaje,
+            'beneficiarios': disponibles,
+        }
     
     def __repr__(self):
         return f'<Actividad {self.nombre}>'
@@ -141,10 +175,68 @@ class Inscripcion(db.Model):
     # Restricción única: un usuario o beneficiario solo puede inscribirse una vez por actividad
     __table_args__ = (db.UniqueConstraint('user_id', 'actividad_id', 'beneficiario_id', name='unique_inscripcion'),)
     
+    def nombre_para_listado(self):
+        """Nombre real del inscrito. Una inscripción sin ficha no se presenta como si fuera el titular."""
+        if self.beneficiario:
+            nombre = f"{self.beneficiario.nombre} {self.beneficiario.primer_apellido}".strip()
+            if self.beneficiario.segundo_apellido:
+                nombre = f"{nombre} {self.beneficiario.segundo_apellido}"
+            return nombre
+        if self.beneficiario_id:
+            return 'Beneficiario dado de baja'
+        if self.usuario:
+            return self.usuario.nombre
+        return 'Socio'
+
+    def nombre_en_familia(self):
+        if self.beneficiario_id is None:
+            return 'Tú'
+        return self.nombre_para_listado()
+
     def __repr__(self):
         if self.beneficiario_id:
             return f'<Inscripcion Beneficiario {self.beneficiario_id} - Actividad {self.actividad_id}>'
         return f'<Inscripcion User {self.user_id} - Actividad {self.actividad_id}>'
+
+
+def reparar_inscripciones_titular():
+    """Quita inscripciones repetidas del titular y las de quien no cumple la edad."""
+    from sqlalchemy import text
+
+    grupos = {}
+    consulta = Inscripcion.query.filter(Inscripcion.beneficiario_id.is_(None)).order_by(Inscripcion.id.asc())
+    for insc in consulta.all():
+        grupos.setdefault((insc.user_id, insc.actividad_id), []).append(insc)
+
+    borradas = 0
+    for inscritos in grupos.values():
+        actividad = inscritos[0].actividad
+        socio = inscritos[0].usuario
+        fuera_de_edad = False
+        if actividad and socio and actividad.tiene_restriccion_edad():
+            puede, _mensaje = actividad.puede_inscribirse_por_edad(socio.ano_para_inscripcion())
+            fuera_de_edad = not puede
+        if fuera_de_edad:
+            for insc in inscritos:
+                db.session.delete(insc)
+                borradas += 1
+        elif len(inscritos) > 1:
+            for insc in inscritos[1:]:
+                db.session.delete(insc)
+                borradas += 1
+    if borradas:
+        db.session.commit()
+        print(f"[INFO] Inscripciones de titular repetidas o fuera de edad eliminadas: {borradas}")
+
+    try:
+        db.session.execute(text(
+            'CREATE UNIQUE INDEX IF NOT EXISTS uq_inscripcion_titular '
+            'ON inscripciones(user_id, actividad_id) WHERE beneficiario_id IS NULL'
+        ))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"[WARNING] No se pudo crear el índice de inscripciones del titular: {e}")
 
 class SolicitudSocio(db.Model):
     __tablename__ = 'solicitudes_socio'
@@ -218,3 +310,21 @@ class RegistroFinanciero(db.Model):
     
     def __repr__(self):
         return f'<RegistroFinanciero {self.tipo} {self.descripcion} {self.importe}€>'
+
+
+class FotoPortada(db.Model):
+    """Fotos que la directiva elige para el slider de la portada pública."""
+    __tablename__ = 'fotos_portada'
+
+    id = db.Column(db.Integer, primary_key=True)
+    archivo = db.Column(db.String(300), nullable=False)
+    titulo = db.Column(db.String(150), nullable=False, default='Cartel')
+    orden = db.Column(db.Integer, nullable=False, default=0)
+    visible = db.Column(db.Boolean, nullable=False, default=True)
+    fecha = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def es_subida(self):
+        return (self.archivo or '').startswith('portada/')
+
+    def __repr__(self):
+        return f'<FotoPortada {self.titulo}>'
